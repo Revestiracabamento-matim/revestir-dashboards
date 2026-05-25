@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revestir v7 — Dashboard de Vendas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--teal:#0D9A8F;--orange:#F07C1A;--dark:#111827;--mid:#374151;--muted:#9CA3AF;--border:#E5E7EB;--bg:#F9FAFB;--white:#fff;--success:#10B981;--danger:#EF4444}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--dark)}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--teal-dark) 0%,var(--teal) 100%)}
+.login-box{background:white;border-radius:16px;padding:48px;width:100%;max-width:400px;box-shadow:0 25px 80px rgba(0,0,0,0.25)}
+.login-logo{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:8px}
+.login-logo-icon{width:44px;height:44px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.login-logo-text{font-size:22px;font-weight:700;color:var(--teal)}
+.login-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:32px}
+.field{margin-bottom:16px}
+.field label{display:block;font-weight:600;font-size:13px;margin-bottom:6px;color:var(--mid)}
+.field input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;transition:all .2s}
+.field input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,154,143,0.12)}
+.btn-login{width:100%;padding:14px;background:var(--teal);color:white;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-login:hover{background:#0a7a6f;transform:translateY(-1px);box-shadow:0 6px 20px rgba(13,154,143,0.3)}
+.login-err{color:var(--danger);font-size:12px;text-align:center;margin-top:10px;height:16px}
+.header{background:white;border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100}
+.header-brand{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:700;color:var(--teal)}
+.header-brand-icon{width:36px;height:36px;background:var(--orange);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.header-right{display:flex;align-items:center;gap:16px;font-size:13px}
+.month-sel{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:white;color:var(--dark);cursor:pointer;transition:all .2s;font-family:inherit}
+.month-sel:focus{outline:none;border-color:var(--teal)}
+.btn-out{padding:8px 16px;background:none;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-out:hover{border-color:var(--danger);color:var(--danger)}
+.tabs{background:white;border-bottom:2px solid var(--border);padding:0 32px;display:flex;overflow-x:auto}
+.tab-btn{padding:16px 20px;background:none;border:none;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;transition:color .2s;font-family:inherit;position:relative;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab-btn:hover{color:var(--teal)}
+.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal)}
+.tab-pane{display:none;padding:32px;animation:fadeUp .25s ease}
+.tab-pane.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+.card{background:white;border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px}
+.card-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.card-title{font-size:15px;font-weight:700}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px}
+.metric{background:white;border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.metric-val{font-size:24px;font-weight:700;color:var(--teal);margin:8px 0}
+.metric-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--bg);padding:12px 14px;text-align:left;font-weight:600;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);text-transform:uppercase;letter-spacing:.5px}
+td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:var(--bg)}
+.empty-row{text-align:center;color:var(--muted);padding:32px!important;font-style:italic}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase}
+.b-green{background:#d1fae5;color:#065f46}
+.b-orange{background:#ffedd5;color:#9a3412}
+.b-blue{background:#dbeafe;color:#1e40af}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-row.cols1{grid-template-columns:1fr}
+.field input,.field select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;transition:all .2s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--teal)}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}
+.btn-teal{background:var(--teal);color:white}
+.btn-teal:hover{background:#0a7a6f;transform:translateY(-1px)}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-ghost{background:none;border:1.5px solid var(--border);color:var(--mid)}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+.btn-danger{background:none;border:1.5px solid var(--danger);color:var(--danger)}
+.btn-danger:hover{background:#fee2e2}
+.alert{padding:14px 16px;border-radius:8px;font-size:13px;margin:12px 0;border-left:4px solid;background:#d1fae5;color:#065f46;border-color:var(--success)}
+.hidden{display:none!important}
+.prog-bar{height:8px;background:var(--border);border-radius:4px;margin:8px 0;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--orange));transition:width .5s}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:white;border-radius:16px;padding:32px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-hd{display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)}
+.pv-sec{border:1px solid var(--border);border-radius:10px;padding:16px;margin:12px 0;background:var(--bg)}
+.pv-sec-title{font-size:12px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.ranking-item{display:flex;align-items:center;gap:16px;padding:16px;border:1px solid var(--border);border-radius:10px;margin-bottom:12px;background:var(--bg)}
+.ranking-medal{font-size:28px;min-width:40px;text-align:center}
+.ranking-info{flex:1}
+.ranking-name{font-weight:700;color:var(--dark)}
+.ranking-stats{font-size:12px;color:var(--muted);margin-top:4px}
+.ranking-value{text-align:right}
+.ranking-value-num{font-size:16px;font-weight:700;color:var(--teal)}
+.ranking-value-sub{font-size:11px;color:var(--muted)}
+@media(max-width:768px){.header{padding:0 16px}.tabs{padding:0 16px}.tab-pane{padding:16px}.form-row{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="login-logo-icon">🏗️</div>
+        <div class="login-logo-text">Revestir</div>
+      </div>
+      <p class="login-sub">Dashboard de Vendas v7</p>
+      <div class="field"><label>Usuário</label><input id="u" type="text" placeholder="seu usuário" autocomplete="off"></div>
+      <div class="field"><label>Senha</label><input id="p" type="password" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')login()"></div>
+      <button class="btn-login" onclick="login()">Entrar</button>
+      <div id="loginErr" class="login-err"></div>
+      <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">Admin: zilamar/2025 | rogerlan/2025</p>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-brand-icon">🏗️</div>
+      Revestir
+    </div>
+    <div style="display:flex;align-items:center;gap:12px" id="monthSel">
+      <label style="font-size:12px;font-weight:600;color:var(--mid)">Período:</label>
+      <select class="month-sel" id="monthSelect" onchange="changeMonth()"></select>
+    </div>
+    <div class="header-right">
+      <span>Olá, <strong id="hUser"></strong></span>
+      <span id="hRole" class="badge b-blue"></span>
+      <button class="btn-out" onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="tabs" id="adminTabs">
+    <button class="tab-btn active" onclick="tab(this,'t-dash')">📈 Dashboard</button>
+    <button class="tab-btn" onclick="tab(this,'t-funil')">🔍 Funil</button>
+    <button class="tab-btn" onclick="tab(this,'t-import')">📥 Importar</button>
+    <button class="tab-btn" onclick="tab(this,'t-vendedores')">👥 Vendedores</button>
+    <button class="tab-btn" onclick="tab(this,'t-posvenda')">✅ Pós-venda</button>
+    <button class="tab-btn" onclick="tab(this,'t-profissionais')">🤝 Profissionais</button>
+    <button class="tab-btn" onclick="tab(this,'t-rt')">💰 RT</button>
+  </div>
+
+  <div class="tabs hidden" id="vendedorTabs">
+    <button class="tab-btn active" onclick="tab(this,'vt-metas')">📊 Minhas Metas</button>
+    <button class="tab-btn" onclick="tab(this,'vt-posvenda')">✅ Pós-venda</button>
+  </div>
+
+  <!-- ADMIN: DASHBOARD -->
+  <div id="t-dash" class="tab-pane active">
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Meta Coletiva</h3></div>
+      <div style="display:flex;gap:10px">
+        <input id="metaInput" type="number" value="400000" style="flex:1;max-width:200px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
+        <button class="btn btn-teal" onclick="updateMeta()">Atualizar</button>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px">
+        <span id="progLabel">0%</span><span id="progValues">R$ 0 / R$ 400k</span>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-lbl">Meta</div><div class="metric-val" id="m-meta">R$ 400k</div></div>
+      <div class="metric"><div class="metric-lbl">Vendido</div><div class="metric-val" style="color:var(--orange)" id="m-vend">R$ 0</div></div>
+      <div class="metric"><div class="metric-lbl">Faltam</div><div class="metric-val" style="color:var(--success)" id="m-falta">R$ 400k</div></div>
+      <div class="metric"><div class="metric-lbl">PV Pendente</div><div class="metric-val" style="color:var(--danger)" id="m-pv">0</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Por Vendedor</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Vendedor</th><th>Total</th><th>Qtd</th><th>Ticket</th></tr></thead>
+          <tbody id="tbDash"><tr><td class="empty-row" colspan="4">Nenhuma venda</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN: FUNIL -->
+  <div id="t-funil" class="tab-pane">
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Novo Orçamento</h3></div>
+      <div class="form-row">
+        <div class="field"><label>Cliente</label><input id="oCliente" type="text" placeholder="Nome do cliente"></div>
+        <div class="field"><label>Telefone</label><input id="oTel" type="text" placeholder="(31) 99999-9999"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Valor (R$)</label><input id="oValor" type="number" placeholder="0,00" step="100"></div>
+        <div class="field"><label>Data do Orçamento</label><input id="oData" type="date"></div>
+      </div>
+      <button class="btn btn-teal" onclick="addOrc()">+ Adicionar Orçamento</button>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-lbl">Abertos</div><div class="metric-val" id="f-abertos">0</div></div>
+      <div class="metric"><div class="metric-lbl">Valor em Aberto</div><div class="metric-val" id="f-valor">R$ 0</div></div>
+      <div class="metric"><div class="metric-lbl">Convertidos</div><div class="metric-val" id="f-conv">0</div></div>
+      <div class="metric"><div class="metric-lbl">Taxa de Conversão</div><div class="metric-val" id="f-taxa">0%</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Orçamentos Abertos</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Cliente</th><th>Telefone</th><th>Valor</th><th>Data</th><th>Dias Aberto</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="tbOrcsAbertos"><tr><td class="empty-row" colspan="7">Nenhum orçamento aberto</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Orçamentos Convertidos</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Cliente</th><th>Telefone</th><th>Valor Orçado</th><th>O.S. Vinculada</th><th>Data Conversão</th><th>Ação</th></tr></thead>
+          <tbody id="tbOrcsConvertidos"><tr><td class="empty-row" colspan="6">Nenhum orçamento convertido</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN: IMPORTAR -->
+  <div id="t-import" class="tab-pane">
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Importar Vendas</h3></div>
+      <div class="alert">✅ Exporte CSV com: Data, OS, Cliente, Valor, Vendedor, FormaPagamento</div>
+      <div class="field"><label>Arquivo CSV</label><input type="file" id="csvFile" accept=".csv" style="padding:8px"></div>
+      <button class="btn btn-teal" onclick="importCSV()">📊 Importar</button>
+      <div id="importMsg" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Vendas Importadas</h3><span id="vendCount" class="badge b-blue">0</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>Vendedor</th><th>O.S.</th><th>Cliente</th><th>Valor</th></tr></thead>
+          <tbody id="tbVendas"><tr><td class="empty-row" colspan="5">Nenhuma</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN: VENDEDORES -->
+  <div id="t-vendedores" class="tab-pane">
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Novo Vendedor</h3></div>
+      <div class="form-row">
+        <div class="field"><label>Nome</label><input id="vNome" type="text"></div>
+        <div class="field"><label>Usuário</label><input id="vUser" type="text" placeholder="ex: gisely"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Senha</label><input id="vSenha" type="password"></div>
+        <div class="field"><label>Email</label><input id="vEmail" type="email"></div>
+      </div>
+      <button class="btn btn-teal" onclick="addVendedor()">+ Adicionar</button>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Vendedores</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>Usuário</th><th>Total</th><th>Qtd</th><th>Ações</th></tr></thead>
+          <tbody id="tbVends"><tr><td class="empty-row" colspan="5">Nenhum</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN: PÓS-VENDA -->
+  <div id="t-posvenda" class="tab-pane">
+    <div class="alert">✅ Clique "Editar" para registrar ações de pós-venda</div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-lbl">Total Vendas</div><div class="metric-val" id="pv-total">0</div></div>
+      <div class="metric"><div class="metric-lbl">Fotos</div><div class="metric-val" style="color:var(--success)" id="pv-foto">0</div></div>
+      <div class="metric"><div class="metric-lbl">Avaliações</div><div class="metric-val" style="color:var(--success)" id="pv-aval">0</div></div>
+      <div class="metric"><div class="metric-lbl">Follow-up Pendente</div><div class="metric-val" style="color:var(--danger)" id="pv-follow">0</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Pós-venda</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Cliente</th><th>Vendedor</th><th>Data</th><th>📸</th><th>⭐</th><th>📞</th><th>Ação</th></tr></thead>
+          <tbody id="tbPV"><tr><td class="empty-row" colspan="7">Nenhuma venda</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN: PROFISSIONAIS -->
+  <div id="t-profissionais" class="tab-pane">
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Novo Profissional</h3></div>
+      <div class="form-row">
+        <div class="field"><label>Nome</label><input id="prNome" type="text"></div>
+        <div class="field"><label>Especialidade</label>
+          <select id="prEsp"><option value="">Selecione</option><option>Arquiteto</option><option>Designer</option><option>Engenheiro</option><option>Construtor</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Telefone</label><input id="prTel" type="text"></div>
+        <div class="field"><label>Chave Pix (opcional)</label><input id="prPix" type="text"></div>
+      </div>
+      <button class="btn btn-teal" onclick="addProf()">+ Adicionar</button>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Profissionais</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>Especialidade</th><th>Telefone</th><th>Pix</th><th>Ações</th></tr></thead>
+          <tbody id="tbProfs"><tr><td class="empty-row" colspan="5">Nenhum</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN: RT -->
+  <div id="t-rt" class="tab-pane">
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">🏆 TOP Profissionais por Indicação</h3></div>
+      <div id="ranking" style="margin-bottom:24px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">RT Consolidado por Profissional</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Profissional</th><th>Especialidade</th><th>Qtd</th><th>Total Indicado</th><th>RT (3%)</th><th>Chave Pix</th></tr></thead>
+          <tbody id="tbRTcons"><tr><td class="empty-row" colspan="6">Nenhuma indicação</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Registrar Indicação</h3></div>
+      <div class="form-row">
+        <div class="field"><label>Profissional</label><select id="rtProf"></select></div>
+        <div class="field"><label>Vendedor</label><select id="rtVend"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Valor (R$)</label><input id="rtVenda" type="number" step="100"></div>
+        <div class="field"><label>Data</label><input id="rtData" type="date"></div>
+      </div>
+      <button class="btn btn-teal" onclick="addRT()">+ Registrar</button>
+    </div>
+  </div>
+
+  <!-- VENDEDOR: METAS -->
+  <div id="vt-metas" class="tab-pane">
+    <div class="metrics">
+      <div class="metric"><div class="metric-lbl">Suas Vendas</div><div class="metric-val" id="vm-total">R$ 0</div></div>
+      <div class="metric"><div class="metric-lbl">Qtd</div><div class="metric-val" style="color:var(--orange)" id="vm-qtd">0</div></div>
+      <div class="metric"><div class="metric-lbl">Ticket Médio</div><div class="metric-val" style="color:var(--success)" id="vm-ticket">R$ 0</div></div>
+      <div class="metric"><div class="metric-lbl">Faixa</div><div class="metric-val" id="vm-faixa">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Minhas Vendas do Mês</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>Cliente</th><th>O.S.</th><th>Valor</th></tr></thead>
+          <tbody id="vmVendas"><tr><td class="empty-row" colspan="4">Nenhuma venda</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VENDEDOR: PÓS-VENDA -->
+  <div id="vt-posvenda" class="tab-pane">
+    <div class="alert">✅ Clique "Editar" para registrar foto, avaliação e follow-up</div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-lbl">Minhas Vendas</div><div class="metric-val" id="vm-pvtotal">0</div></div>
+      <div class="metric"><div class="metric-lbl">Fotos</div><div class="metric-val" style="color:var(--success)" id="vm-pvfoto">0</div></div>
+      <div class="metric"><div class="metric-lbl">Avaliações</div><div class="metric-val" style="color:var(--success)" id="vm-pvaval">0</div></div>
+      <div class="metric"><div class="metric-lbl">Follow-up Pendente</div><div class="metric-val" style="color:var(--danger)" id="vm-pvfollow">0</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3 class="card-title">Pós-venda</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Cliente</th><th>Data</th><th>Valor</th><th>📸</th><th>⭐</th><th>📞</th><th>Ação</th></tr></thead>
+          <tbody id="vmPVTable"><tr><td class="empty-row" colspan="7">Nenhuma venda</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR VENDEDOR -->
+<div id="editVendModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3 style="font-size:15px;font-weight:700">Editar Vendedor</h3>
+      <button class="modal-close" onclick="closeEditVend()">✕</button>
+    </div>
+    <input id="evId" type="hidden">
+    <div class="form-row cols1">
+      <div class="field"><label>Nome</label><input id="evNome" type="text"></div>
+      <div class="field"><label>Usuário</label><input id="evUser" type="text"></div>
+      <div class="field"><label>Senha</label><input id="evSenha" type="password" placeholder="deixar em branco para não alterar"></div>
+      <div class="field"><label>Email</label><input id="evEmail" type="email"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-teal" onclick="saveEditVend()">💾 Salvar</button>
+      <button class="btn btn-ghost" onclick="closeEditVend()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR PROFISSIONAL -->
+<div id="editProfModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3 style="font-size:15px;font-weight:700">Editar Profissional</h3>
+      <button class="modal-close" onclick="closeEditProf()">✕</button>
+    </div>
+    <input id="epId" type="hidden">
+    <div class="form-row cols1">
+      <div class="field"><label>Nome</label><input id="epNome" type="text"></div>
+      <div class="field"><label>Especialidade</label>
+        <select id="epEsp"><option value="">Selecione</option><option>Arquiteto</option><option>Designer</option><option>Engenheiro</option><option>Construtor</option></select>
+      </div>
+      <div class="field"><label>Telefone</label><input id="epTel" type="text"></div>
+      <div class="field"><label>Chave Pix (opcional)</label><input id="epPix" type="text"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-teal" onclick="saveEditProf()">💾 Salvar</button>
+      <button class="btn btn-ghost" onclick="closeEditProf()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONVERTER ORÇAMENTO -->
+<div id="convertOrcModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3 style="font-size:15px;font-weight:700">Converter Orçamento em Venda</h3>
+      <button class="modal-close" onclick="closeConvertOrc()">✕</button>
+    </div>
+    <input id="coId" type="hidden">
+    <div class="form-row cols1">
+      <div class="field"><label>Cliente</label><input id="coCliente" type="text" readonly style="background:var(--bg);color:var(--muted)"></div>
+      <div class="field"><label>Valor Orçado</label><input id="coValor" type="text" readonly style="background:var(--bg);color:var(--muted)"></div>
+      <div class="field"><label>Número da O.S. (ex: V50265)</label><input id="coOS" type="text" placeholder="V50265"></div>
+      <div class="field"><label>Data de Fechamento</label><input id="coDataFech" type="date"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-teal" onclick="saveConvertOrc()">✅ Converter</button>
+      <button class="btn btn-ghost" onclick="closeConvertOrc()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PÓS-VENDA -->
+<div id="pvModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3 style="font-size:15px;font-weight:700">Registrar Pós-venda</h3>
+      <button class="modal-close" onclick="closePVModal()">✕</button>
+    </div>
+    <input id="pvOS" type="hidden">
+
+    <div class="pv-sec">
+      <div class="pv-sec-title">📸 Foto</div>
+      <div class="form-row cols1">
+        <div class="field"><label>Status</label><select id="pvFotoStatus"><option value="pendente">❌ Pendente</option><option value="coletada">✅ Coletada</option></select></div>
+        <div class="field"><label>Descrição</label><input id="pvFotoDesc" type="text" placeholder="Ex: Cozinha com piso porto belo"></div>
+      </div>
+    </div>
+
+    <div class="pv-sec">
+      <div class="pv-sec-title">⭐ Avaliação Google</div>
+      <div class="form-row cols1">
+        <div class="field"><label>Status</label><select id="pvAvalStatus"><option value="pendente">❌ Pendente</option><option value="coletada">✅ Coletada</option></select></div>
+        <div class="field"><label>Nota</label><select id="pvAvalNota"><option value="">Selecione</option><option value="5">⭐⭐⭐⭐⭐ 5 estrelas</option><option value="4">⭐⭐⭐⭐ 4 estrelas</option><option value="3">⭐⭐⭐ 3 estrelas</option></select></div>
+        <div class="field"><label>Link</label><input id="pvAvalLink" type="url" placeholder="https://maps.google.com/..."></div>
+        <div class="field"><label>Comentário</label><input id="pvAvalComent" type="text" placeholder="O que o cliente escreveu"></div>
+      </div>
+    </div>
+
+    <div class="pv-sec">
+      <div class="pv-sec-title">📞 Follow-up</div>
+      <div class="form-row cols1">
+        <div class="field"><label>Status</label><select id="pvFollowStatus"><option value="pendente">❌ Pendente</option><option value="realizado">✅ Realizado</option></select></div>
+        <div class="field"><label>Modo</label><select id="pvFollowModo"><option value="">Selecione</option><option value="WhatsApp">WhatsApp</option><option value="Ligação">Ligação</option><option value="Visita">Visita Presencial</option></select></div>
+        <div class="field"><label>Feedback</label><input id="pvFollowFeed" type="text" placeholder="O que o cliente disse"></div>
+        <div class="field"><label>Próxima Ação</label><input id="pvFollowProx" type="text" placeholder="Ex: Ligar em 15 dias"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-teal" onclick="savePV()">💾 Salvar</button>
+      <button class="btn btn-ghost" onclick="closePVModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMINS={zilamar:{pwd:'2025',name:'Zilamar Nunes',role:'admin'},rogerlan:{pwd:'2025',name:'Rogerlan Ferreira',role:'admin'}};
+const MONTHS=['maio_2026','junho_2026','julho_2026','agosto_2026','setembro_2026','outubro_2026','novembro_2026','dezembro_2026'];
+const MONTH_LABELS={maio_2026:'Maio 2026',junho_2026:'Junho 2026',julho_2026:'Julho 2026',agosto_2026:'Agosto 2026',setembro_2026:'Setembro 2026',outubro_2026:'Outubro 2026',novembro_2026:'Novembro 2026',dezembro_2026:'Dezembro 2026'};
+
+let me=null,currentMonth='maio_2026';
+let S={meta:400000,vendas:[],orcamentos:[],posvenda:{},profissionais:[],vendedores:[],indicacoes:[]};
+
+// AUTH
+function login(){const u=document.getElementById('u').value.trim().toLowerCase();const p=document.getElementById('p').value;document.getElementById('loginErr').textContent='';if(ADMINS[u]&&ADMINS[u].pwd===p){me={user:u,...ADMINS[u]};loadAndGo();return;}const vend=S.vendedores.find(v=>v.user===u&&v.senha===p);if(vend){me={user:u,name:vend.nome,role:'vendedor'};loadAndGo();return;}document.getElementById('loginErr').textContent='Usuário ou senha incorretos';}
+function loadAndGo(){loadData();document.getElementById('loginScreen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('hUser').textContent=me.name;document.getElementById('hRole').textContent=me.role.toUpperCase();const ms=document.getElementById('monthSelect');ms.innerHTML=MONTHS.map(m=>`<option value="${m}">${MONTH_LABELS[m]}</option>`).join('');ms.value=currentMonth;if(me.role==='admin'){document.getElementById('adminTabs').classList.remove('hidden');document.getElementById('vendedorTabs').classList.add('hidden');}else{document.getElementById('adminTabs').classList.add('hidden');document.getElementById('vendedorTabs').classList.remove('hidden');}renderAll();}
+function logout(){me=null;document.getElementById('loginScreen').classList.remove('hidden');document.getElementById('app').classList.add('hidden');document.getElementById('u').value='';document.getElementById('p').value='';}
+
+// STORAGE
+function saveData(){localStorage.setItem(`rv6_${currentMonth}`,JSON.stringify(S));}
+function loadData(){const d=localStorage.getItem(`rv6_${currentMonth}`);if(d){const p=JSON.parse(d);S={...S,...p};}if(!S.vendedores)S.vendedores=[];if(!S.indicacoes)S.indicacoes=[];if(!S.profissionais)S.profissionais=[];if(!S.orcamentos)S.orcamentos=[];if(!S.posvenda)S.posvenda={};if(!S.vendas)S.vendas=[];}
+function changeMonth(){currentMonth=document.getElementById('monthSelect').value;loadData();renderAll();}
+
+// TABS
+function tab(btn,id){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// IMPORT CSV
+function importCSV(){const file=document.getElementById('csvFile').files[0];const msg=document.getElementById('importMsg');if(!file){msg.innerHTML='<div class="alert">❌ Selecione um arquivo</div>';return;}const reader=new FileReader();reader.onload=function(e){const text=e.target.result;const lines=text.split('\n').filter(l=>l.trim());if(lines.length<2){msg.innerHTML='<div class="alert">❌ CSV vazio</div>';return;}const header=lines[0].split(',').map(h=>h.trim().toLowerCase());const cols={data:header.findIndex(h=>h.includes('data')),os:header.findIndex(h=>h.includes('os')),cliente:header.findIndex(h=>h.includes('cliente')),valor:header.findIndex(h=>h.includes('valor')),vendedor:header.findIndex(h=>h.includes('vendedor'))};let count=0,skipped=0;for(let i=1;i<lines.length;i++){const row=parseCSV(lines[i]);if(row.length<4)continue;const data=(row[cols.data]||'').trim();const os=(row[cols.os]||'').trim();const cliente=(row[cols.cliente]||'').trim();const valor=parseFloat((row[cols.valor]||'0').trim().replace(',','.'));const vendedor=cleanVend((row[cols.vendedor]||'').trim());if(!data||!os||isNaN(valor)||valor<=0||!vendedor)continue;const dup=S.vendas.some(v=>v.os===os&&v.vendedor===vendedor);if(dup){skipped++;continue;}S.vendas.push({id:Date.now()+Math.random(),data,os,cliente,valor,vendedor});count++;}saveData();renderAll();msg.innerHTML=count>0?`<div class="alert">✅ ${count} importadas!${skipped?' ('+skipped+' dup)':''}</div>`:'<div class="alert">❌ Nenhuma reconhecida</div>';};reader.readAsText(file);}
+function parseCSV(line){const result=[];let cur='';let inQ=false;for(let c of line){if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){result.push(cur);cur='';}else{cur+=c;}}result.push(cur);return result.map(s=>s.trim().replace(/^"|"$/g,''));}
+function cleanVend(v){return v.replace(/\s*-\s*\d+\s*$/,'').trim();}
+
+// UPDATE META
+function updateMeta(){const v=parseFloat(document.getElementById('metaInput').value);if(!isNaN(v)&&v>0){S.meta=v;saveData();renderDash();}}
+
+// RENDER
+function renderAll(){me.role==='admin'?renderAdmin():renderVendor();}
+function renderAdmin(){renderDash();renderFunil();renderVendasList();renderVendedores();renderPV();renderProfs();renderRT();populateSelects();}
+function renderVendor(){renderVendorDash();renderVendorPV();}
+
+// ADMIN DASH
+function renderDash(){const total=S.vendas.reduce((s,v)=>s+v.valor,0);const prog=Math.min(100,(total/S.meta*100)).toFixed(1);const falta=Math.max(0,S.meta-total);const pvPend=S.vendas.filter(v=>!S.posvenda[v.os]||S.posvenda[v.os].followStatus==='pendente').length;document.getElementById('m-meta').textContent=fmt(S.meta);document.getElementById('m-vend').textContent=fmt(total);document.getElementById('m-falta').textContent=fmt(falta);document.getElementById('m-pv').textContent=pvPend;document.getElementById('metaInput').value=S.meta;document.getElementById('progLabel').textContent=prog+'%';document.getElementById('progValues').textContent=`${fmt(total)} / ${fmt(S.meta)}`;document.getElementById('progFill').style.width=prog+'%';const res={};S.vendas.forEach(v=>{if(!res[v.vendedor])res[v.vendedor]={total:0,qtd:0};res[v.vendedor].total+=v.valor;res[v.vendedor].qtd+=1;});const rows=Object.entries(res).sort((a,b)=>b[1].total-a[1].total).map(([nome,d])=>{return `<tr><td><strong>${nome}</strong></td><td>${fmt(d.total)}</td><td>${d.qtd}</td><td>${fmt(d.total/d.qtd)}</td></tr>`;}).join('');document.getElementById('tbDash').innerHTML=rows||'<tr><td class="empty-row" colspan="4">Nenhuma</td></tr>';}
+
+// FUNIL
+function addOrc(){const cliente=document.getElementById('oCliente').value.trim();const tel=document.getElementById('oTel').value.trim();const valor=parseFloat(document.getElementById('oValor').value);const data=document.getElementById('oData').value;if(!cliente||!tel||isNaN(valor)||valor<=0||!data){alert('Preencha todos os campos');return;}S.orcamentos.push({id:Date.now(),cliente,tel,valor,data,status:'aberto',os:null});saveData();renderAll();['oCliente','oTel','oValor','oData'].forEach(id=>document.getElementById(id).value='');}
+function renderFunil(){const ab=S.orcamentos.filter(o=>o.status==='aberto');const conv=S.orcamentos.filter(o=>o.status==='convertido');const tot=S.orcamentos.length;const taxa=tot>0?Math.round(conv.length/tot*100):0;document.getElementById('f-abertos').textContent=ab.length;document.getElementById('f-valor').textContent=fmt(ab.reduce((s,o)=>s+o.valor,0));document.getElementById('f-conv').textContent=conv.length;document.getElementById('f-taxa').textContent=taxa+'%';const rowsAb=ab.map(o=>{const dias=Math.floor((Date.now()-new Date(o.data))/(86400000));const cls=dias>30?'b-orange':dias>15?'b-orange':'b-green';return `<tr><td><strong>${o.cliente}</strong></td><td>${o.tel}</td><td>${fmt(o.valor)}</td><td>${o.data}</td><td><span class="badge ${cls}">${dias}d</span></td><td><span class="badge b-blue">Aberto</span></td><td><button class="btn btn-sm btn-teal" onclick="openConvertOrc(${o.id})">Converter</button> <button class="btn btn-sm btn-danger" onclick="perderOrc(${o.id})">✗ Perder</button></td></tr>`;}).join('');document.getElementById('tbOrcsAbertos').innerHTML=rowsAb||'<tr><td class="empty-row" colspan="7">Nenhum</td></tr>';const rowsConv=conv.map(o=>{return `<tr><td><strong>${o.cliente}</strong></td><td>${o.tel}</td><td>${fmt(o.valor)}</td><td><code style="font-size:11px">${o.os}</code></td><td>${o.dataConv||''}</td><td><button class="btn btn-sm btn-ghost" onclick="editConvertOrc(${o.id})">Editar</button></td></tr>`;}).join('');document.getElementById('tbOrcsConvertidos').innerHTML=rowsConv||'<tr><td class="empty-row" colspan="6">Nenhum</td></tr>';}
+function openConvertOrc(id){const o=S.orcamentos.find(x=>x.id===id);if(!o)return;document.getElementById('coId').value=id;document.getElementById('coCliente').value=o.cliente;document.getElementById('coValor').value=fmt(o.valor);document.getElementById('coOS').value='';document.getElementById('coDataFech').value=new Date().toISOString().split('T')[0];document.getElementById('convertOrcModal').classList.remove('hidden');}
+function closeConvertOrc(){document.getElementById('convertOrcModal').classList.add('hidden');}
+function saveConvertOrc(){const id=parseInt(document.getElementById('coId').value);const os=document.getElementById('coOS').value.trim().toUpperCase();const dataConv=document.getElementById('coDataFech').value;if(!os||!dataConv){alert('Preencha O.S. e data de fechamento');return;}const o=S.orcamentos.find(x=>x.id===id);if(!o)return;o.status='convertido';o.os=os;o.dataConv=dataConv;saveData();renderAll();closeConvertOrc();}
+function editConvertOrc(id){openConvertOrc(id);}
+function perderOrc(id){if(!confirm('Marcar como perdido?'))return;const o=S.orcamentos.find(x=>x.id===id);if(o)o.status='perdido';saveData();renderAll();}
+function renderVendasList(){const list=[...S.vendas].reverse().slice(0,100);const rows=list.map(v=>`<tr><td>${v.data}</td><td>${v.vendedor}</td><td><code style="font-size:11px">${v.os}</code></td><td>${v.cliente}</td><td>${fmt(v.valor)}</td></tr>`).join('');document.getElementById('tbVendas').innerHTML=rows||'<tr><td class="empty-row" colspan="5">Nenhuma</td></tr>';document.getElementById('vendCount').textContent=S.vendas.length;}
+
+// VENDEDORES
+function addVendedor(){const nome=document.getElementById('vNome').value.trim();const user=document.getElementById('vUser').value.trim().toLowerCase();const senha=document.getElementById('vSenha').value;const email=document.getElementById('vEmail').value.trim();if(!nome||!user||!senha){alert('Preencha nome, usuário e senha');return;}S.vendedores.push({id:Date.now(),nome,user,senha,email});saveData();renderAll();['vNome','vUser','vSenha','vEmail'].forEach(id=>document.getElementById(id).value='');}
+function renderVendedores(){const rows=S.vendedores.map(v=>{const tv=S.vendas.filter(x=>x.vendedor===v.nome).reduce((s,x)=>s+x.valor,0);const qv=S.vendas.filter(x=>x.vendedor===v.nome).length;return `<tr><td><strong>${v.nome}</strong></td><td><code>${v.user}</code></td><td>${fmt(tv)}</td><td>${qv}</td><td><button class="btn btn-sm btn-ghost" onclick="openEditVend(${v.id})">✏️ Editar</button> <button class="btn btn-sm btn-danger" onclick="delVend(${v.id})">Remover</button></td></tr>`;}).join('');document.getElementById('tbVends').innerHTML=rows||'<tr><td class="empty-row" colspan="5">Nenhum</td></tr>';}
+function delVend(id){if(!confirm('Remover vendedor?'))return;S.vendedores=S.vendedores.filter(v=>v.id!==id);saveData();renderAll();}
+function openEditVend(id){const v=S.vendedores.find(x=>x.id===id);if(!v)return;document.getElementById('evId').value=id;document.getElementById('evNome').value=v.nome;document.getElementById('evUser').value=v.user;document.getElementById('evSenha').value='';document.getElementById('evEmail').value=v.email;document.getElementById('editVendModal').classList.remove('hidden');}
+function closeEditVend(){document.getElementById('editVendModal').classList.add('hidden');}
+function saveEditVend(){const id=parseInt(document.getElementById('evId').value);const nome=document.getElementById('evNome').value.trim();const user=document.getElementById('evUser').value.trim().toLowerCase();const senha=document.getElementById('evSenha').value;const email=document.getElementById('evEmail').value.trim();if(!nome||!user){alert('Preencha nome e usuário');return;}const v=S.vendedores.find(x=>x.id===id);if(!v)return;v.nome=nome;v.user=user;if(senha)v.senha=senha;v.email=email;saveData();renderAll();closeEditVend();}
+
+// PROFISSIONAIS
+function addProf(){const nome=document.getElementById('prNome').value.trim();const esp=document.getElementById('prEsp').value;const tel=document.getElementById('prTel').value.trim();const pix=document.getElementById('prPix').value.trim();if(!nome||!esp){alert('Preencha nome e especialidade');return;}S.profissionais.push({id:Date.now(),nome,esp,tel,pix:pix||''});saveData();renderAll();['prNome','prTel','prPix'].forEach(id=>document.getElementById(id).value='');document.getElementById('prEsp').value='';}
+function renderProfs(){const rows=S.profissionais.map(p=>`<tr><td><strong>${p.nome}</strong></td><td>${p.esp}</td><td>${p.tel||'-'}</td><td><code style="font-size:11px">${p.pix||'-'}</code></td><td><button class="btn btn-sm btn-ghost" onclick="openEditProf(${p.id})">✏️ Editar</button> <button class="btn btn-sm btn-danger" onclick="delProf(${p.id})">Remover</button></td></tr>`).join('');document.getElementById('tbProfs').innerHTML=rows||'<tr><td class="empty-row" colspan="5">Nenhum</td></tr>';}
+function delProf(id){if(!confirm('Remover profissional?'))return;S.profissionais=S.profissionais.filter(p=>p.id!==id);saveData();renderAll();}
+function openEditProf(id){const p=S.profissionais.find(x=>x.id===id);if(!p)return;document.getElementById('epId').value=id;document.getElementById('epNome').value=p.nome;document.getElementById('epEsp').value=p.esp;document.getElementById('epTel').value=p.tel||'';document.getElementById('epPix').value=p.pix||'';document.getElementById('editProfModal').classList.remove('hidden');}
+function closeEditProf(){document.getElementById('editProfModal').classList.add('hidden');}
+function saveEditProf(){const id=parseInt(document.getElementById('epId').value);const nome=document.getElementById('epNome').value.trim();const esp=document.getElementById('epEsp').value;const tel=document.getElementById('epTel').value.trim();const pix=document.getElementById('epPix').value.trim();if(!nome||!esp){alert('Preencha nome e especialidade');return;}const p=S.profissionais.find(x=>x.id===id);if(!p)return;p.nome=nome;p.esp=esp;p.tel=tel;p.pix=pix;saveData();renderAll();closeEditProf();}
+
+// PÓS-VENDA
+function renderPV(){const total=S.vendas.length;const fotos=S.vendas.filter(v=>S.posvenda[v.os]?.fotoStatus==='coletada').length;const avals=S.vendas.filter(v=>S.posvenda[v.os]?.avalStatus==='coletada').length;const follows=S.vendas.filter(v=>!S.posvenda[v.os]||S.posvenda[v.os]?.followStatus==='pendente').length;document.getElementById('pv-total').textContent=total;document.getElementById('pv-foto').textContent=fotos;document.getElementById('pv-aval').textContent=avals;document.getElementById('pv-follow').textContent=follows;const rows=S.vendas.map(v=>{const pv=S.posvenda[v.os]||{};const c=pv.fotoStatus==='coletada'&&pv.avalStatus==='coletada'&&pv.followStatus==='realizado';return `<tr><td><strong>${v.cliente}</strong></td><td>${v.vendedor}</td><td>${v.data}</td><td>${pv.fotoStatus==='coletada'?'✅':'❌'}</td><td>${pv.avalStatus==='coletada'?'✅':'❌'}</td><td>${pv.followStatus==='realizado'?'✅':'❌'}</td><td><button class="btn btn-sm btn-ghost" onclick="openPVModal('${v.os}')">Editar</button></td></tr>`;}).join('');document.getElementById('tbPV').innerHTML=rows||'<tr><td class="empty-row" colspan="7">Nenhuma</td></tr>';}
+function openPVModal(os){const pv=S.posvenda[os]||{};document.getElementById('pvOS').value=os;document.getElementById('pvFotoStatus').value=pv.fotoStatus||'pendente';document.getElementById('pvFotoDesc').value=pv.fotoDesc||'';document.getElementById('pvAvalStatus').value=pv.avalStatus||'pendente';document.getElementById('pvAvalNota').value=pv.avalNota||'';document.getElementById('pvAvalLink').value=pv.avalLink||'';document.getElementById('pvAvalComent').value=pv.avalComent||'';document.getElementById('pvFollowStatus').value=pv.followStatus||'pendente';document.getElementById('pvFollowModo').value=pv.followModo||'';document.getElementById('pvFollowFeed').value=pv.followFeed||'';document.getElementById('pvFollowProx').value=pv.followProx||'';document.getElementById('pvModal').classList.remove('hidden');}
+function closePVModal(){document.getElementById('pvModal').classList.add('hidden');}
+function savePV(){const os=document.getElementById('pvOS').value;S.posvenda[os]={fotoStatus:document.getElementById('pvFotoStatus').value,fotoDesc:document.getElementById('pvFotoDesc').value,avalStatus:document.getElementById('pvAvalStatus').value,avalNota:document.getElementById('pvAvalNota').value,avalLink:document.getElementById('pvAvalLink').value,avalComent:document.getElementById('pvAvalComent').value,followStatus:document.getElementById('pvFollowStatus').value,followModo:document.getElementById('pvFollowModo').value,followFeed:document.getElementById('pvFollowFeed').value,followProx:document.getElementById('pvFollowProx').value};saveData();renderAll();closePVModal();}
+
+// RT
+function addRT(){const prof=document.getElementById('rtProf').value;const vend=document.getElementById('rtVend').value;const venda=parseFloat(document.getElementById('rtVenda').value);const data=document.getElementById('rtData').value;if(!prof||!vend||isNaN(venda)||venda<=0||!data){alert('Preencha todos os campos');return;}S.indicacoes.push({id:Date.now(),prof,vend,venda,data,rt:venda*0.03});saveData();renderAll();document.getElementById('rtVenda').value='';}
+function renderRT(){const cons={};S.indicacoes.forEach(i=>{if(!cons[i.prof])cons[i.prof]={total:0,qtd:0,rt:0};cons[i.prof].total+=i.venda;cons[i.prof].qtd+=1;cons[i.prof].rt+=i.rt;});const sorted=Object.entries(cons).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,5);const medals=['🥇','🥈','🥉','4️⃣','5️⃣'];const rankingHTML=sorted.map((e,idx)=>{const [nome,d]=e;const prof=S.profissionais.find(p=>p.nome===nome);return `<div class="ranking-item"><div class="ranking-medal">${medals[idx]}</div><div class="ranking-info"><div class="ranking-name">${nome}</div><div class="ranking-stats">${prof?prof.esp:'-'} • ${d.qtd} indicações</div></div><div class="ranking-value"><div class="ranking-value-num">${d.qtd}</div><div class="ranking-value-sub">${fmt(d.rt)}</div></div></div>`;}).join('');document.getElementById('ranking').innerHTML=rankingHTML||'<p style="text-align:center;color:var(--muted)">Nenhuma indicação registrada</p>';const rowsCons=Object.entries(cons).map(([nome,d])=>{const prof=S.profissionais.find(p=>p.nome===nome);return `<tr><td><strong>${nome}</strong></td><td>${prof?prof.esp:'-'}</td><td>${d.qtd}</td><td>${fmt(d.total)}</td><td><strong style="color:var(--orange)">${fmt(d.rt)}</strong></td><td><code style="font-size:11px">${prof?.pix||'-'}</code></td></tr>`;}).join('');document.getElementById('tbRTcons').innerHTML=rowsCons||'<tr><td class="empty-row" colspan="6">Nenhuma indicação</td></tr>';}
+
+// VENDEDOR DASH
+function renderVendorDash(){const myVendas=S.vendas.filter(v=>v.vendedor===me.name);const total=myVendas.reduce((s,v)=>s+v.valor,0);const qtd=myVendas.length;const ticket=qtd>0?total/qtd:0;document.getElementById('vm-total').textContent=fmt(total);document.getElementById('vm-qtd').textContent=qtd;document.getElementById('vm-ticket').textContent=fmt(ticket);document.getElementById('vm-faixa').textContent=getFaixa(total).label;const rows=myVendas.reverse().map(v=>`<tr><td>${v.data}</td><td>${v.cliente}</td><td><code>${v.os}</code></td><td>${fmt(v.valor)}</td></tr>`).join('');document.getElementById('vmVendas').innerHTML=rows||'<tr><td class="empty-row" colspan="4">Nenhuma</td></tr>';}
+function getFaixa(t){if(t>=150000)return{label:'🏆 Ouro'};if(t>=100000)return{label:'🥈 Prata'};if(t>=80000)return{label:'🥉 Bronze'};if(t>=60000)return{label:'Entrada'};if(t>=40000)return{label:'Aquecimento'};return{label:'—'};}
+
+// VENDEDOR PÓS-VENDA
+function renderVendorPV(){const myVendas=S.vendas.filter(v=>v.vendedor===me.name);const total=myVendas.length;const fotos=myVendas.filter(v=>S.posvenda[v.os]?.fotoStatus==='coletada').length;const avals=myVendas.filter(v=>S.posvenda[v.os]?.avalStatus==='coletada').length;const follows=myVendas.filter(v=>!S.posvenda[v.os]||S.posvenda[v.os]?.followStatus==='pendente').length;document.getElementById('vm-pvtotal').textContent=total;document.getElementById('vm-pvfoto').textContent=fotos;document.getElementById('vm-pvaval').textContent=avals;document.getElementById('vm-pvfollow').textContent=follows;const rows=myVendas.map(v=>{const pv=S.posvenda[v.os]||{};return `<tr><td><strong>${v.cliente}</strong></td><td>${v.data}</td><td>${fmt(v.valor)}</td><td>${pv.fotoStatus==='coletada'?'✅':'❌'}</td><td>${pv.avalStatus==='coletada'?'✅':'❌'}</td><td>${pv.followStatus==='realizado'?'✅':'❌'}</td><td><button class="btn btn-sm btn-ghost" onclick="openPVModal('${v.os}')">Editar</button></td></tr>`;}).join('');document.getElementById('vmPVTable').innerHTML=rows||'<tr><td class="empty-row" colspan="7">Nenhuma</td></tr>';}
+
+// SELECTS
+function populateSelects(){const allVends=[...Object.values(ADMINS).map(a=>a.name),...S.vendedores.map(v=>v.nome),...new Set(S.vendas.map(v=>v.vendedor))].filter((v,i,a)=>a.indexOf(v)===i);const selects=['rtVend'];selects.forEach(id=>{const el=document.getElementById(id);if(el){const val=el.value;el.innerHTML='<option value="">Selecione</option>'+allVends.map(n=>`<option value="${n}">${n}</option>`).join('');el.value=val;}});const rtP=document.getElementById('rtProf');if(rtP){const val=rtP.value;rtP.innerHTML='<option value="">Selecione</option>'+S.profissionais.map(p=>`<option value="${p.nome}">${p.nome} (${p.esp})</option>`).join('');rtP.value=val;}}
+
+// UTILS
+function fmt(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+// INIT
+window.addEventListener('load',()=>{loadData();const today=new Date().toISOString().split('T')[0];['rtData'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=today;});});
+</script>
+
+</body>
+</html>
