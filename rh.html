@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Revestir — Gestão de Pessoas</title>
+<style>
+:root{
+  --teal:#0D9A8F; --teal-dark:#087a72; --laranja:#F07C1A;
+  --bg:#f4f6f7; --card:#ffffff; --txt:#1b2b2a; --txt2:#6a7b7a;
+  --borda:#e2e8e8; --vermelho:#c0392b; --amarelo:#d68910; --verde:#1e8449;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px;padding-bottom:40px}
+header{background:var(--teal);color:#fff;padding:14px 16px;
+  padding-top:calc(14px + env(safe-area-inset-top))}
+header h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.3px}
+header p{margin:2px 0 0;font-size:12px;opacity:.85}
+nav{display:flex;overflow-x:auto;background:var(--teal-dark);
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;background:none;border:none;color:#cfeeeb;
+  padding:12px 14px;font-size:13px;font-weight:600;cursor:pointer;
+  border-bottom:3px solid transparent;font-family:inherit}
+nav button.on{color:#fff;border-bottom-color:var(--laranja)}
+main{padding:14px 12px;max-width:1100px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--borda);border-radius:12px;
+  padding:14px;margin-bottom:12px}
+.card h2{margin:0 0 10px;font-size:15px;font-weight:700}
+.card h2 span{font-weight:400;color:var(--txt2);font-size:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--borda);border-radius:12px;padding:12px}
+.kpi .lb{font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px}
+.kpi .vl{font-size:22px;font-weight:700;margin-top:4px}
+.kpi .sub{font-size:11px;color:var(--txt2);margin-top:2px}
+.alerta{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;
+  margin-bottom:8px;font-size:13px;line-height:1.4}
+.a-alto{background:#fdecea;border-left:4px solid var(--vermelho)}
+.a-medio{background:#fef5e7;border-left:4px solid var(--amarelo)}
+.a-ok{background:#eafaf1;border-left:4px solid var(--verde)}
+.alerta b{display:block}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 6px;border-bottom:2px solid var(--borda);
+  color:var(--txt2);font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+td{padding:9px 6px;border-bottom:1px solid var(--borda);vertical-align:middle}
+.rolagem{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.t-verde{background:#eafaf1;color:var(--verde)}
+.t-amarelo{background:#fef5e7;color:var(--amarelo)}
+.t-vermelho{background:#fdecea;color:var(--vermelho)}
+.t-cinza{background:#eef1f1;color:var(--txt2)}
+button.bt{background:var(--teal);color:#fff;border:none;border-radius:9px;
+  padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+button.bt.lar{background:var(--laranja)}
+button.bt.gh{background:#fff;color:var(--teal);border:1.5px solid var(--teal)}
+button.mini{background:none;border:1px solid var(--borda);border-radius:7px;
+  padding:5px 9px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--txt2)}
+.linha-bt{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:600;color:var(--txt2);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--borda);
+  border-radius:9px;font-size:15px;font-family:inherit;background:#fff;color:var(--txt)}
+textarea{min-height:70px;resize:vertical}
+.grade2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.modal{position:fixed;inset:0;background:rgba(15,30,30,.55);z-index:50;
+  display:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal.on{display:block}
+.modal-in{background:#fff;max-width:620px;margin:20px auto;border-radius:14px;
+  padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.modal-in h3{margin:0 0 4px;font-size:16px}
+.modal-in .dica{font-size:12px;color:var(--txt2);margin:0 0 8px}
+.vazio{text-align:center;padding:26px 10px;color:var(--txt2);font-size:13px}
+.aviso{background:#fff8e6;border:1px solid #f5d58a;border-radius:10px;
+  padding:10px 12px;font-size:12.5px;line-height:1.5;margin-bottom:12px}
+.pag{display:none}
+.pag.on{display:block}
+.barra{height:6px;background:#eef1f1;border-radius:4px;overflow:hidden;margin-top:6px}
+.barra i{display:block;height:100%;background:var(--teal)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:#1b2b2a;
+  color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;z-index:99;display:none}
+.pos{font-size:12px;color:var(--txt2);margin-top:6px}
+@media print{
+  header,nav,.linha-bt,#toast,.naoimprime{display:none!important}
+  body{background:#fff;padding:0}
+  .card{border:none;page-break-inside:avoid}
+}
+@media(max-width:520px){.grade2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>REVESTIR — Gestão de Pessoas</h1>
+  <p id="hdSub">Carregando...</p>
+</header>
+
+<nav>
+  <button id="nvPainel" class="on" onclick="irPara('Painel')">Painel</button>
+  <button id="nvEquipe" onclick="irPara('Equipe')">Equipe</button>
+  <button id="nvSemana" onclick="irPara('Semana')">Lançar Semana</button>
+  <button id="nvHoras" onclick="irPara('Horas')">Banco de Horas</button>
+  <button id="nvFerias" onclick="irPara('Ferias')">Férias</button>
+  <button id="nvDocs" onclick="irPara('Docs')">Documentos</button>
+  <button id="nvOcor" onclick="irPara('Ocor')">Ocorrências</button>
+  <button id="nvRemun" onclick="irPara('Remun')">Remuneração</button>
+  <button id="nvEspelho" onclick="irPara('Espelho')">Espelho de Ponto</button>
+</nav>
+
+<main>
+
+<!-- PAINEL -->
+<div id="pgPainel" class="pag on">
+  <div class="kpis" id="pnKpis"></div>
+  <div class="card">
+    <h2>O que exige ação <span>ordenado por risco</span></h2>
+    <div id="pnAlertas"></div>
+  </div>
+  <div class="card">
+    <h2>Situação por pessoa <span>semana corrente e acumulado do mês</span></h2>
+    <div class="rolagem"><table id="pnTabela"></table></div>
+  </div>
+</div>
+
+<!-- EQUIPE -->
+<div id="pgEquipe" class="pag">
+  <div class="linha-bt">
+    <button class="bt" onclick="abrirColab('')">+ Novo colaborador</button>
+    <button class="bt gh" onclick="carregar()">Atualizar dados</button>
+  </div>
+  <div class="card">
+    <h2>Filtrar <span>os totais abaixo mudam junto</span></h2>
+    <div class="grade2">
+      <div><label>Situação</label>
+        <select id="fqStatus" onchange="renderEquipe()">
+          <option value="ativos">Somente ativos</option>
+          <option value="todos">Todos</option>
+          <option value="Ativo">Ativo</option>
+          <option value="Férias">Em férias</option>
+          <option value="Afastado">Afastado</option>
+          <option value="Aviso prévio">Aviso prévio</option>
+          <option value="Desligado">Desligado</option>
+        </select>
+      </div>
+      <div><label>Setor</label><select id="fqSetor" onchange="renderEquipe()"><option value="">Todos os setores</option></select></div>
+      <div><label>Tipo de contrato</label><select id="fqContrato" onchange="renderEquipe()"><option value="">Todos</option></select></div>
+      <div><label>Buscar por nome ou cargo</label><input type="text" id="fqBusca" oninput="renderEquipe()" placeholder="digite para filtrar"></div>
+    </div>
+  </div>
+  <div class="kpis" id="eqResumo"></div>
+  <div class="card">
+    <h2>Resumo da equipe <span id="eqContagem"></span></h2>
+    <div class="rolagem"><table id="eqTabela"></table></div>
+  </div>
+  <div class="card">
+    <h2>Aniversariantes do mês</h2>
+    <div id="eqAniver"></div>
+  </div>
+</div>
+
+<!-- SEMANA -->
+<div id="pgSemana" class="pag">
+  <div class="aviso">
+    <b>Rotina semanal — 1x por semana, 5 minutos.</b><br>
+    Lance a semana fechada de todos de uma vez. O sistema calcula banco de horas,
+    frequência e alertas automaticamente. Semana sem lançamento aparece como pendência no Painel.
+  </div>
+  <div class="card">
+    <h2>Lançar semana</h2>
+    <div class="grade2">
+      <div><label>Início da semana (segunda)</label><input type="date" id="swIni" onchange="calcFimSemana()"></div>
+      <div><label>Fim da semana (sábado)</label><input type="date" id="swFim"></div>
+    </div>
+    <label>Dias úteis da semana</label>
+    <input type="number" id="swDias" value="6" min="0" max="7">
+    <div id="swLista"></div>
+    <div class="linha-bt" style="margin-top:14px">
+      <button class="bt lar" onclick="salvarSemana()">Salvar a semana toda</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Semanas já lançadas</h2>
+    <div class="rolagem"><table id="swHist"></table></div>
+  </div>
+</div>
+
+<!-- BANCO DE HORAS -->
+<div id="pgHoras" class="pag">
+  <div class="aviso">
+    <b>Saldo = horas extras lançadas − atrasos − horas pagas − horas compensadas.</b><br>
+    Toda hora extra precisa terminar em uma das duas saídas: <b>paga em folha</b> ou
+    <b>compensada com folga</b>. Saldo que só cresce é passivo acumulando.
+  </div>
+  <div class="linha-bt">
+    <button class="bt" onclick="abrirMov('')">+ Pagar ou compensar horas</button>
+  </div>
+  <div class="card">
+    <h2>Saldo por pessoa</h2>
+    <div class="rolagem"><table id="bhTabela"></table></div>
+  </div>
+  <div class="card">
+    <h2>Movimentações registradas</h2>
+    <div class="rolagem"><table id="bhMov"></table></div>
+  </div>
+</div>
+
+<!-- FERIAS -->
+<div id="pgFerias" class="pag">
+  <div class="aviso">
+    <b>Regra que gera processo:</b> as férias precisam ser concedidas dentro dos 12 meses
+    seguintes ao fim do período aquisitivo. Passou disso, a empresa paga em dobro.
+    O sistema avisa com 90 dias de antecedência.
+  </div>
+  <div class="linha-bt">
+    <button class="bt" onclick="abrirFerias('')">+ Registrar período de férias</button>
+  </div>
+  <div class="card">
+    <h2>Controle de férias</h2>
+    <div class="rolagem"><table id="feTabela"></table></div>
+  </div>
+</div>
+
+<!-- DOCUMENTOS -->
+<div id="pgDocs" class="pag">
+  <div class="aviso">
+    <b>Pasta funcional é prova.</b> Em reclamação trabalhista, documento que não existe
+    conta contra a empresa. Marque onde cada papel está guardado e o que está só no físico.
+  </div>
+  <div class="linha-bt">
+    <button class="bt" onclick="abrirDoc('')">+ Registrar documento</button>
+    <button class="bt gh" onclick="gerarChecklistDocs()">Checklist do que está faltando</button>
+  </div>
+  <div class="card">
+    <h2>Documentos por pessoa</h2>
+    <div class="rolagem"><table id="doTabela"></table></div>
+  </div>
+</div>
+
+<!-- OCORRENCIAS -->
+<div id="pgOcor" class="pag">
+  <div class="aviso">
+    <b>Advertência não registrada não existe.</b> Registre no dia, com data, descrição objetiva
+    e ação tomada. É esse histórico que sustenta uma demissão por justa causa ou defende a empresa.
+  </div>
+  <div class="linha-bt">
+    <button class="bt" onclick="abrirOcor('')">+ Registrar ocorrência</button>
+  </div>
+  <div class="card">
+    <h2>Histórico de ocorrências</h2>
+    <div class="rolagem"><table id="ocTabela"></table></div>
+  </div>
+</div>
+
+<!-- REMUNERACAO -->
+<div id="pgRemun" class="pag">
+  <div class="linha-bt">
+    <button class="bt" onclick="abrirSal('')">+ Aumento de salário</button>
+    <button class="bt" onclick="abrirBenef('')">+ Benefício</button>
+    <button class="bt lar" onclick="abrirBonif('')">+ Bonificação</button>
+  </div>
+  <div class="card">
+    <h2>Custo mensal de pessoal <span>salários + benefícios + bonificações do mês</span></h2>
+    <div class="rolagem"><table id="rmCusto"></table></div>
+  </div>
+  <div class="card">
+    <h2>Histórico de aumentos</h2>
+    <div class="rolagem"><table id="rmSal"></table></div>
+  </div>
+  <div class="card">
+    <h2>Benefícios ativos</h2>
+    <div class="rolagem"><table id="rmBenef"></table></div>
+  </div>
+  <div class="card">
+    <h2>Bonificações</h2>
+    <div class="rolagem"><table id="rmBonif"></table></div>
+  </div>
+</div>
+
+<!-- ESPELHO -->
+<div id="pgEspelho" class="pag">
+  <div class="aviso naoimprime">
+    <b>Este é o documento que transforma dado em defesa.</b> Gere uma vez por mês,
+    imprima, e cada pessoa assina o seu. Registro assinado pelo colaborador é a prova
+    que vale em audiência — planilha digitada só pela empresa não é.
+  </div>
+  <div class="card naoimprime">
+    <h2>Gerar espelho de ponto mensal</h2>
+    <div class="grade2">
+      <div><label>Colaborador</label><select id="epColab"></select></div>
+      <div><label>Mês de referência</label><input type="month" id="epMes"></div>
+    </div>
+    <div class="linha-bt" style="margin-top:12px">
+      <button class="bt" onclick="gerarEspelho()">Gerar</button>
+      <button class="bt gh" onclick="window.print()">Imprimir</button>
+    </div>
+  </div>
+  <div id="epSaida"></div>
+</div>
+
+</main>
+
+<!-- MODAL GENERICO -->
+<div class="modal" id="mdBox">
+  <div class="modal-in">
+    <h3 id="mdTit">Título</h3>
+    <p class="dica" id="mdDica"></p>
+    <div id="mdCorpo"></div>
+    <div class="linha-bt" style="margin-top:16px">
+      <button class="bt" id="mdOk" onclick="mdSalvar()">Salvar</button>
+      <button class="bt gh" onclick="fecharModal()">Cancelar</button>
+      <button class="mini" id="mdDel" onclick="mdExcluir()" style="margin-left:auto">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIGURACAO
+   ============================================================ */
+var PORTA = 'https://script.google.com/macros/s/AKfycbx0nhJ50N88AhfEDojDD2XtNOtwklLu1bkSU93jf_afyi0YgeYrFBtMDtPPnN8gPkQD/exec';
+
+var DB = {
+  COLABORADORES: [], LANCAMENTOS: [], MOVHORAS: [], FERIAS: [],
+  DOCUMENTOS: [], OCORRENCIAS: [], HISTSALARIO: [], BENEFICIOS: [], BONIFICACOES: []
+};
+
+var DOCS_OBRIGATORIOS = ['CTPS','RG','CPF','Comprovante de endereço','Exame admissional',
+  'Contrato de trabalho','Ficha de registro','Vale transporte (opção)','Dados bancários'];
+
+var _mdTabela = '';
+var _mdReg = null;
+var _mdCampos = [];
+
+/* ============================================================
+   UTILITARIOS
+   ============================================================ */
+function el(id){ return document.getElementById(id); }
+
+function normStr(s){
+  if (s === null || s === undefined) { return ''; }
+  return String(s).trim().toLowerCase();
+}
+
+function num(v){
+  if (v === null || v === undefined || v === '') { return 0; }
+  var s = String(v).replace(/[^0-9,.\-]/g,'').replace(/\./g,'').replace(',','.');
+  var n = Number(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function moeda(v){
+  var n = num(v);
+  return 'R$ ' + n.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+}
+
+function hhmm(h){
+  var neg = h < 0;
+  var abs = Math.abs(h);
+  var hr = Math.floor(abs);
+  var mi = Math.round((abs - hr) * 60);
+  if (mi === 60) { hr = hr + 1; mi = 0; }
+  var t = hr + 'h' + (mi < 10 ? '0' + mi : mi);
+  return (neg ? '-' : '') + t;
+}
+
+function dataMs(s){
+  if (!s) { return 0; }
+  var t = String(s).trim();
+  if (t.indexOf('/') > -1) {
+    var p = t.split('/');
+    if (p.length === 3) { return new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0])).getTime(); }
+  }
+  var d = new Date(t + (t.length === 10 ? 'T12:00:00' : ''));
+  var ms = d.getTime();
+  return isNaN(ms) ? 0 : ms;
+}
+
+function dataBR(s){
+  var ms = dataMs(s);
+  if (!ms) { return '—'; }
+  var d = new Date(ms);
+  var dia = d.getDate(); var mes = d.getMonth() + 1;
+  return (dia < 10 ? '0' + dia : dia) + '/' + (mes < 10 ? '0' + mes : mes) + '/' + d.getFullYear();
+}
+
+function hojeMs(){
+  var d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0).getTime();
+}
+
+function diasEntre(a, b){ return Math.round((b - a) / 86400000); }
+
+function isoHoje(){
+  var d = new Date();
+  var m = d.getMonth() + 1; var dia = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (dia < 10 ? '0' + dia : dia);
+}
+
+function esc(s){
+  if (s === null || s === undefined) { return ''; }
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg){
+  var t = el('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 2600);
+}
+
+function colab(id){
+  for (var i = 0; i < DB.COLABORADORES.length; i++) {
+    if (String(DB.COLABORADORES[i].id) === String(id)) { return DB.COLABORADORES[i]; }
+  }
+  return null;
+}
+
+function nomeColab(id){
+  var c = colab(id);
+  return c ? c.nome : '(removido)';
+}
+
+function ativos(){
+  var out = [];
+  for (var i = 0; i < DB.COLABORADORES.length; i++) {
+    var c = DB.COLABORADORES[i];
+    if (normStr(c.status) !== 'desligado' && normStr(c.status) !== 'inativo') { out.push(c); }
+  }
+  return out;
+}
+
+function porColab(tabela, id){
+  var arr = DB[tabela] || [];
+  var out = [];
+  for (var i = 0; i < arr.length; i++) {
+    if (String(arr[i].colabId) === String(id)) { out.push(arr[i]); }
+  }
+  return out;
+}
+
+/* ============================================================
+   PORTA
+   ============================================================ */
+function chamar(payload, cb){
+  if (PORTA.indexOf('COLE_AQUI') === 0) {
+    toast('Porta não configurada — veja o passo a passo');
+    if (cb) { cb({ ok:false, erro:'porta nao configurada' }); }
+    return;
+  }
+  fetch(PORTA, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  }).then(function(r){ return r.json(); })
+    .then(function(j){ if (cb) { cb(j); } })
+    .catch(function(e){ toast('Falha de conexão'); if (cb) { cb({ ok:false, erro:String(e) }); } });
+}
+
+function carregar(){
+  el('hdSub').textContent = 'Carregando dados...';
+  chamar({ acao:'ler' }, function(j){
+    if (j && j.ok && j.dados) {
+      var ks = Object.keys(DB);
+      for (var i = 0; i < ks.length; i++) {
+        DB[ks[i]] = j.dados[ks[i]] || [];
+      }
+      el('hdSub').textContent = ativos().length + ' pessoas ativas · dados de ' + new Date().toLocaleDateString('pt-BR');
+    } else {
+      el('hdSub').textContent = 'Sem conexão com a base — veja o passo a passo de instalação';
+    }
+    renderAll();
+  });
+}
+
+function salvarReg(tabela, reg, cb){
+  chamar({ acao:'salvar', tabela:tabela, registro:reg }, function(j){
+    if (j && j.ok) {
+      toast('Salvo');
+      carregar();
+      if (cb) { cb(); }
+    } else {
+      toast('Erro ao salvar: ' + (j && j.erro ? j.erro : 'desconhecido'));
+    }
+  });
+}
+
+function excluirReg(tabela, id){
+  chamar({ acao:'excluir', tabela:tabela, id:id }, function(j){
+    if (j && j.ok) { toast('Excluído'); carregar(); }
+    else { toast('Erro ao excluir'); }
+  });
+}
+
+/* ============================================================
+   NAVEGACAO
+   ============================================================ */
+var PAGS = ['Painel','Equipe','Semana','Horas','Ferias','Docs','Ocor','Remun','Espelho'];
+
+function irPara(p){
+  for (var i = 0; i < PAGS.length; i++) {
+    var pg = el('pg' + PAGS[i]);
+    var nv = el('nv' + PAGS[i]);
+    if (pg) { pg.className = (PAGS[i] === p) ? 'pag on' : 'pag'; }
+    if (nv) { nv.className = (PAGS[i] === p) ? 'on' : ''; }
+  }
+  window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   CALCULOS DE NEGOCIO
+   ============================================================ */
+
+/* Saldo de banco de horas de um colaborador */
+function saldoHoras(id){
+  var credito = 0, debito = 0;
+  var lan = porColab('LANCAMENTOS', id);
+  for (var i = 0; i < lan.length; i++) {
+    credito = credito + num(lan[i].he50) + num(lan[i].he100);
+    debito = debito + (num(lan[i].atrasosMin) / 60);
+  }
+  var mov = porColab('MOVHORAS', id);
+  var pago = 0, compensado = 0;
+  for (var j = 0; j < mov.length; j++) {
+    var t = normStr(mov[j].tipo);
+    var h = num(mov[j].horas);
+    if (t.indexOf('pag') > -1) { pago = pago + h; }
+    else if (t.indexOf('compens') > -1) { compensado = compensado + h; }
+    else if (t.indexOf('ajuste') > -1) { credito = credito + h; }
+  }
+  return {
+    credito: credito, atrasos: debito, pago: pago, compensado: compensado,
+    saldo: credito - debito - pago - compensado
+  };
+}
+
+/* Frequencia do mes corrente */
+function freqMes(id){
+  var d = new Date();
+  var ini = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  var fim = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59).getTime();
+  var lan = porColab('LANCAMENTOS', id);
+  var dias = 0, faltas = 0, just = 0, atrasos = 0, he = 0, semanas = 0;
+  for (var i = 0; i < lan.length; i++) {
+    var ms = dataMs(lan[i].semanaIni);
+    if (ms >= ini && ms <= fim) {
+      dias = dias + num(lan[i].diasUteis);
+      faltas = faltas + num(lan[i].faltas);
+      just = just + num(lan[i].faltasJust);
+      atrasos = atrasos + num(lan[i].atrasosMin);
+      he = he + num(lan[i].he50) + num(lan[i].he100);
+      semanas = semanas + 1;
+    }
+  }
+  var pres = dias - faltas - just;
+  var pct = dias > 0 ? (pres / dias) * 100 : 0;
+  return { dias:dias, faltas:faltas, just:just, atrasos:atrasos, he:he, pct:pct, semanas:semanas };
+}
+
+/* Limite legal de concessao de ferias: fim do periodo aquisitivo + 12 meses */
+function feriasRisco(f){
+  var fimAq = dataMs(f.aquisitivoFim);
+  if (!fimAq) { return { dias: 99999, nivel: 'cinza', texto: 'Período não informado' }; }
+  var limite = new Date(fimAq);
+  limite.setFullYear(limite.getFullYear() + 1);
+  var faltam = diasEntre(hojeMs(), limite.getTime());
+  var saldo = num(f.diasDireito) - num(f.diasGozados);
+  if (saldo <= 0) { return { dias: faltam, nivel: 'verde', texto: 'Quitado' }; }
+  if (faltam < 0) { return { dias: faltam, nivel: 'vermelho', texto: 'VENCIDO há ' + Math.abs(faltam) + ' dias — pagamento em dobro' }; }
+  if (faltam <= 90) { return { dias: faltam, nivel: 'vermelho', texto: 'Vence em ' + faltam + ' dias' }; }
+  if (faltam <= 180) { return { dias: faltam, nivel: 'amarelo', texto: 'Vence em ' + faltam + ' dias' }; }
+  return { dias: faltam, nivel: 'verde', texto: 'Vence em ' + faltam + ' dias' };
+}
+
+/* Documentos faltando por colaborador */
+function docsFaltando(id){
+  var tem = {};
+  var docs = porColab('DOCUMENTOS', id);
+  for (var i = 0; i < docs.length; i++) { tem[normStr(docs[i].documento)] = true; }
+  var falta = [];
+  for (var j = 0; j < DOCS_OBRIGATORIOS.length; j++) {
+    if (!tem[normStr(DOCS_OBRIGATORIOS[j])]) { falta.push(DOCS_OBRIGATORIOS[j]); }
+  }
+  return falta;
+}
+
+/* Custo mensal de uma pessoa */
+function custoMes(id){
+  var c = colab(id);
+  var base = c ? num(c.salario) : 0;
+  var ben = 0;
+  var bs = porColab('BENEFICIOS', id);
+  for (var i = 0; i < bs.length; i++) {
+    if (normStr(bs[i].status) === 'encerrado') { continue; }
+    var v = num(bs[i].valor);
+    var p = normStr(bs[i].periodicidade);
+    if (p.indexOf('anual') > -1) { v = v / 12; }
+    if (p.indexOf('semanal') > -1) { v = v * 4.33; }
+    if (p.indexOf('di') > -1) { v = v * 22; }
+    ben = ben + v;
+  }
+  var d = new Date();
+  var m = d.getMonth() + 1;
+  var mesRef = (m < 10 ? '0' + m : m) + '/' + d.getFullYear();
+  var bonif = 0;
+  var bn = porColab('BONIFICACOES', id);
+  for (var j = 0; j < bn.length; j++) {
+    if (String(bn[j].mesRef).indexOf(String(d.getFullYear())) > -1 &&
+        String(bn[j].mesRef).indexOf(mesRef.substring(0,2)) === 0) {
+      bonif = bonif + num(bn[j].valor);
+    }
+  }
+  var horas = 0;
+  var mov = porColab('MOVHORAS', id);
+  for (var k = 0; k < mov.length; k++) {
+    if (normStr(mov[k].tipo).indexOf('pag') > -1) {
+      var dm = dataMs(mov[k].data);
+      if (dm >= new Date(d.getFullYear(), d.getMonth(), 1).getTime()) { horas = horas + num(mov[k].valor); }
+    }
+  }
+  return { base: base, beneficios: ben, bonificacoes: bonif, horas: horas,
+           total: base + ben + bonif + horas };
+}
+
+/* Semana em curso sem lancamento */
+function semanasPendentes(){
+  var d = new Date();
+  var dow = d.getDay();
+  var diffSeg = (dow === 0 ? 6 : dow - 1);
+  var segAtual = new Date(d.getFullYear(), d.getMonth(), d.getDate() - diffSeg, 12, 0, 0);
+  var pend = [];
+  for (var s = 1; s <= 4; s++) {
+    var seg = new Date(segAtual.getTime() - s * 7 * 86400000);
+    var lancadas = 0;
+    for (var i = 0; i < DB.LANCAMENTOS.length; i++) {
+      if (Math.abs(dataMs(DB.LANCAMENTOS[i].semanaIni) - seg.getTime()) < 86400000 * 2) { lancadas++; }
+    }
+    if (lancadas < ativos().length) {
+      pend.push({ seg: seg, lancadas: lancadas, esperado: ativos().length });
+    }
+  }
+  return pend;
+}
+
+/* Tempo de casa em texto curto */
+function tempoCasa(adm){
+  var ms = dataMs(adm);
+  if (!ms) { return { meses: 0, txt: '—' }; }
+  var dias = diasEntre(ms, hojeMs());
+  var meses = Math.floor(dias / 30.44);
+  var anos = Math.floor(meses / 12);
+  var resto = meses - anos * 12;
+  var txt = '';
+  if (anos > 0) { txt = anos + (anos === 1 ? ' ano' : ' anos'); }
+  if (resto > 0) { txt = txt + (txt ? ' e ' : '') + resto + (resto === 1 ? ' mês' : ' meses'); }
+  if (txt === '') { txt = dias + ' dias'; }
+  return { meses: meses, txt: txt };
+}
+
+/* Contrato de experiencia: quantos dias faltam para virar prazo indeterminado */
+function fimExperiencia(c){
+  var ct = normStr(c.contrato);
+  if (ct.indexOf('experi') < 0) { return null; }
+  var prazo = ct.indexOf('45') > -1 ? 45 : (ct.indexOf('90') > -1 ? 90 : 90);
+  var ms = dataMs(c.admissao);
+  if (!ms) { return null; }
+  var fim = ms + prazo * 86400000;
+  return { prazo: prazo, fim: fim, faltam: diasEntre(hojeMs(), fim) };
+}
+
+/* Aniversariantes do mes corrente */
+function aniversariantesMes(){
+  var m = new Date().getMonth();
+  var out = [];
+  for (var i = 0; i < DB.COLABORADORES.length; i++) {
+    var c = DB.COLABORADORES[i];
+    var ms = dataMs(c.nascimento);
+    if (!ms) { continue; }
+    var d = new Date(ms);
+    if (d.getMonth() === m) { out.push({ c: c, dia: d.getDate() }); }
+  }
+  out.sort(function(a,b){ return a.dia - b.dia; });
+  return out;
+}
+
+/* Lista filtrada da aba Equipe */
+function equipeFiltrada(){
+  var st = el('fqStatus') ? el('fqStatus').value : 'ativos';
+  var se = el('fqSetor') ? el('fqSetor').value : '';
+  var ct = el('fqContrato') ? el('fqContrato').value : '';
+  var bu = normStr(el('fqBusca') ? el('fqBusca').value : '');
+  var out = [];
+  for (var i = 0; i < DB.COLABORADORES.length; i++) {
+    var c = DB.COLABORADORES[i];
+    var s = normStr(c.status);
+    if (st === 'ativos') {
+      if (s === 'desligado' || s === 'inativo') { continue; }
+    } else if (st !== 'todos') {
+      if (s !== normStr(st)) { continue; }
+    }
+    if (se && normStr(c.setor) !== normStr(se)) { continue; }
+    if (ct && normStr(c.contrato) !== normStr(ct)) { continue; }
+    if (bu && (normStr(c.nome) + ' ' + normStr(c.cargo)).indexOf(bu) < 0) { continue; }
+    out.push(c);
+  }
+  return out;
+}
+
+function preencherFiltros(){
+  var se = el('fqSetor'); var ct = el('fqContrato');
+  if (!se || !ct) { return; }
+  var setores = {}; var contratos = {};
+  for (var i = 0; i < DB.COLABORADORES.length; i++) {
+    if (DB.COLABORADORES[i].setor) { setores[DB.COLABORADORES[i].setor] = true; }
+    if (DB.COLABORADORES[i].contrato) { contratos[DB.COLABORADORES[i].contrato] = true; }
+  }
+  var vs = se.value; var vc = ct.value;
+  var hs = '<option value="">Todos os setores</option>';
+  var ks = Object.keys(setores);
+  for (var j = 0; j < ks.length; j++) { hs += '<option value="' + esc(ks[j]) + '">' + esc(ks[j]) + '</option>'; }
+  se.innerHTML = hs; se.value = vs;
+  var hc = '<option value="">Todos</option>';
+  var kc = Object.keys(contratos);
+  for (var k = 0; k < kc.length; k++) { hc += '<option value="' + esc(kc[k]) + '">' + esc(kc[k]) + '</option>'; }
+  ct.innerHTML = hc; ct.value = vc;
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function renderAll(){
+  preencherFiltros();
+  renderPainel();
+  renderEquipe();
+  renderSemana();
+  renderHoras();
+  renderFerias();
+  renderDocs();
+  renderOcor();
+  renderRemun();
+  preencherSelectColab();
+}
+
+function renderPainel(){
+  var at = ativos();
+  var custoTotal = 0, saldoTotal = 0, docsFalt = 0, feriasRisc = 0, ocorAbertas = 0;
+  for (var i = 0; i < at.length; i++) {
+    custoTotal = custoTotal + custoMes(at[i].id).total;
+    saldoTotal = saldoTotal + saldoHoras(at[i].id).saldo;
+    docsFalt = docsFalt + docsFaltando(at[i].id).length;
+  }
+  for (var j = 0; j < DB.FERIAS.length; j++) {
+    var r = feriasRisco(DB.FERIAS[j]);
+    if (r.nivel === 'vermelho') { feriasRisc++; }
+  }
+  for (var k = 0; k < DB.OCORRENCIAS.length; k++) {
+    if (normStr(DB.OCORRENCIAS[k].status) !== 'resolvida' && normStr(DB.OCORRENCIAS[k].status) !== 'encerrada') { ocorAbertas++; }
+  }
+
+  var h = '';
+  h += kpi('Pessoas ativas', at.length, DB.COLABORADORES.length + ' no cadastro');
+  h += kpi('Custo de pessoal / mês', moeda(custoTotal), 'salário + benefícios + bônus');
+  h += kpi('Banco de horas', hhmm(saldoTotal), saldoTotal > 0 ? 'passivo a pagar ou compensar' : 'sem passivo');
+  h += kpi('Férias em risco', feriasRisc, feriasRisc > 0 ? 'atenção — risco de dobra' : 'nenhuma vencendo');
+  h += kpi('Documentos faltando', docsFalt, 'somando toda a equipe');
+  h += kpi('Ocorrências abertas', ocorAbertas, 'sem resolução registrada');
+  el('pnKpis').innerHTML = h;
+
+  var a = '';
+  var pend = semanasPendentes();
+  if (pend.length > 0) {
+    a += alerta('alto', 'Lançamento semanal atrasado',
+      pend.length + ' semana(s) das últimas 4 sem lançamento completo. Sem esse dado, nada aqui é confiável — e nenhum registro serve de prova.');
+  }
+  for (var f = 0; f < DB.FERIAS.length; f++) {
+    var fr = feriasRisco(DB.FERIAS[f]);
+    if (fr.nivel === 'vermelho') {
+      a += alerta('alto', 'Férias — ' + nomeColab(DB.FERIAS[f].colabId),
+        fr.texto + '. Saldo de ' + (num(DB.FERIAS[f].diasDireito) - num(DB.FERIAS[f].diasGozados)) + ' dias. Programe já e formalize o aviso com 30 dias.');
+    } else if (fr.nivel === 'amarelo') {
+      a += alerta('medio', 'Férias — ' + nomeColab(DB.FERIAS[f].colabId), fr.texto + '. Entre na escala do próximo trimestre.');
+    }
+  }
+  for (var s = 0; s < at.length; s++) {
+    var sh = saldoHoras(at[s].id);
+    if (sh.saldo >= 20) {
+      a += alerta('medio', 'Banco de horas alto — ' + at[s].nome,
+        'Saldo de ' + hhmm(sh.saldo) + '. Decida: pagar em folha ou compensar com folga. Saldo alto vira passivo e cansaço.');
+    }
+    var fm = freqMes(at[s].id);
+    if (fm.dias > 0 && fm.pct < 90) {
+      a += alerta('medio', 'Frequência baixa — ' + at[s].nome,
+        fm.pct.toFixed(0) + '% de presença no mês (' + fm.faltas + ' falta(s) não justificada(s)). Converse e registre em Ocorrências.');
+    }
+    var df = docsFaltando(at[s].id);
+    if (df.length >= 3) {
+      a += alerta('alto', 'Pasta funcional incompleta — ' + at[s].nome,
+        'Faltam ' + df.length + ' documentos: ' + df.slice(0,4).join(', ') + (df.length > 4 ? '...' : '') + '. Isso é o item mais barato de resolver e o mais caro de ignorar.');
+    }
+  }
+  for (var x = 0; x < at.length; x++) {
+    var ex2 = fimExperiencia(at[x]);
+    if (ex2 && ex2.faltam >= 0 && ex2.faltam <= 15) {
+      a += alerta('alto', 'Contrato de experiência terminando — ' + at[x].nome,
+        'Faltam ' + ex2.faltam + ' dias. Decida agora: efetivar, prorrogar ou encerrar. Se a data passar sem decisão, o contrato vira automaticamente por prazo indeterminado e encerrar depois fica muito mais caro.');
+    } else if (ex2 && ex2.faltam < 0) {
+      a += alerta('alto', 'Experiência vencida — ' + at[x].nome,
+        'O prazo terminou há ' + Math.abs(ex2.faltam) + ' dias. O contrato já é por prazo indeterminado. Atualize o tipo de contrato no cadastro.');
+    }
+  }
+  for (var o = 0; o < DB.OCORRENCIAS.length; o++) {
+    var oc = DB.OCORRENCIAS[o];
+    if (normStr(oc.status) !== 'resolvida' && normStr(oc.status) !== 'encerrada' && normStr(oc.gravidade) === 'grave') {
+      a += alerta('alto', 'Ocorrência grave aberta — ' + nomeColab(oc.colabId),
+        esc(oc.descricao || oc.tipo) + '. Defina a ação e a data de resolução.');
+    }
+  }
+  if (a === '') {
+    a = alerta('ok', 'Nada em risco hoje', 'Todos os controles em dia. Mantenha o lançamento semanal — é ele que sustenta tudo.');
+  }
+  el('pnAlertas').innerHTML = a;
+
+  var t = '<tr><th>Pessoa</th><th>Cargo</th><th>Freq. mês</th><th>Faltas</th><th>Atrasos</th><th>HE mês</th><th>Banco de horas</th><th>Custo/mês</th></tr>';
+  if (at.length === 0) {
+    t += '<tr><td colspan="8" class="vazio">Nenhum colaborador ativo. Comece cadastrando a equipe em "Equipe".</td></tr>';
+  }
+  for (var p = 0; p < at.length; p++) {
+    var c = at[p];
+    var fq = freqMes(c.id);
+    var sh2 = saldoHoras(c.id);
+    var cl = fq.pct >= 95 ? 't-verde' : (fq.pct >= 90 ? 't-amarelo' : 't-vermelho');
+    if (fq.dias === 0) { cl = 't-cinza'; }
+    t += '<tr><td><b>' + esc(c.nome) + '</b></td><td>' + esc(c.cargo) + '</td>' +
+      '<td><span class="tag ' + cl + '">' + (fq.dias > 0 ? fq.pct.toFixed(0) + '%' : 'sem dado') + '</span></td>' +
+      '<td>' + fq.faltas + (fq.just > 0 ? ' (+' + fq.just + ' just.)' : '') + '</td>' +
+      '<td>' + fq.atrasos + ' min</td><td>' + hhmm(fq.he) + '</td>' +
+      '<td><b>' + hhmm(sh2.saldo) + '</b></td><td>' + moeda(custoMes(c.id).total) + '</td></tr>';
+  }
+  el('pnTabela').innerHTML = t;
+}
+
+function kpi(lb, vl, sub){
+  return '<div class="kpi"><div class="lb">' + lb + '</div><div class="vl">' + vl +
+         '</div><div class="sub">' + sub + '</div></div>';
+}
+
+function alerta(nivel, tit, txt){
+  var cls = nivel === 'alto' ? 'a-alto' : (nivel === 'medio' ? 'a-medio' : 'a-ok');
+  return '<div class="alerta ' + cls + '"><div><b>' + tit + '</b>' + txt + '</div></div>';
+}
+
+function renderEquipe(){
+  preencherFiltros();
+  var lista = equipeFiltrada();
+
+  var soma = 0, somaSal = 0, comSal = 0, somaMeses = 0, comAdm = 0, expCount = 0;
+  for (var q = 0; q < lista.length; q++) {
+    soma = soma + custoMes(lista[q].id).total;
+    if (num(lista[q].salario) > 0) { somaSal = somaSal + num(lista[q].salario); comSal++; }
+    var tc = tempoCasa(lista[q].admissao);
+    if (tc.meses > 0) { somaMeses = somaMeses + tc.meses; comAdm++; }
+    if (fimExperiencia(lista[q])) { expCount++; }
+  }
+  var mediaMeses = comAdm > 0 ? Math.round(somaMeses / comAdm) : 0;
+  var anosM = Math.floor(mediaMeses / 12);
+  var mesesM = mediaMeses - anosM * 12;
+  var txtMedia = (anosM > 0 ? anosM + 'a ' : '') + mesesM + 'm';
+
+  var r = '';
+  r += kpi('Pessoas no filtro', lista.length, DB.COLABORADORES.length + ' no cadastro todo');
+  r += kpi('Custo do grupo / mês', moeda(soma), 'salário + benefícios + bônus');
+  r += kpi('Salário médio', comSal > 0 ? moeda(somaSal / comSal) : 'R$ 0,00', comSal + ' com salário informado');
+  r += kpi('Tempo médio de casa', txtMedia, 'quanto a equipe já rodou com você');
+  r += kpi('Em experiência', expCount, expCount > 0 ? 'prazo correndo — veja a coluna' : 'nenhum contrato em prazo');
+  el('eqResumo').innerHTML = r;
+  el('eqContagem').textContent = lista.length + ' de ' + DB.COLABORADORES.length;
+
+  var t = '<tr><th>Nome</th><th>Cargo</th><th>Setor</th><th>Admissão</th><th>Tempo de casa</th>' +
+          '<th>Contrato</th><th>Salário</th><th>Situação</th><th>Pasta</th><th></th></tr>';
+  if (lista.length === 0) {
+    t += '<tr><td colspan="10" class="vazio">Nenhuma pessoa neste filtro. Mude o filtro ou clique em "+ Novo colaborador".</td></tr>';
+  }
+  for (var i = 0; i < lista.length; i++) {
+    var c = lista[i];
+    var st = normStr(c.status);
+    var cl = st === 'ativo' ? 't-verde' : (st === 'férias' || st === 'ferias' ? 't-amarelo' :
+             (st === 'desligado' ? 't-cinza' : 't-amarelo'));
+    var df = docsFaltando(c.id).length;
+    var ex = fimExperiencia(c);
+    var txtCt = esc(c.contrato);
+    if (ex) {
+      var tagEx = ex.faltam < 0 ? '<span class="tag t-vermelho">prazo vencido</span>' :
+                  (ex.faltam <= 10 ? '<span class="tag t-vermelho">' + ex.faltam + ' dias</span>' :
+                   '<span class="tag t-amarelo">' + ex.faltam + ' dias</span>');
+      txtCt = txtCt + '<div class="pos">termina ' + dataBR(new Date(ex.fim).toISOString().substring(0,10)) + ' ' + tagEx + '</div>';
+    }
+    t += '<tr><td><b>' + esc(c.nome) + '</b><div class="pos">' + esc(c.telefone || '') + '</div></td>' +
+      '<td>' + esc(c.cargo) + '</td><td>' + esc(c.setor) + '</td><td>' + dataBR(c.admissao) + '</td>' +
+      '<td>' + tempoCasa(c.admissao).txt + '</td>' +
+      '<td>' + txtCt + '</td><td>' + moeda(c.salario) + '</td>' +
+      '<td><span class="tag ' + cl + '">' + esc(c.status || '—') + '</span></td>' +
+      '<td>' + (df === 0 ? '<span class="tag t-verde">ok</span>' : '<span class="tag t-vermelho">' + df + ' falta</span>') + '</td>' +
+      '<td><button class="mini" onclick="abrirColab(\'' + c.id + '\')">Editar</button></td></tr>';
+  }
+  el('eqTabela').innerHTML = t;
+
+  var an = aniversariantesMes();
+  var ha = '';
+  for (var a = 0; a < an.length; a++) {
+    ha += '<div class="alerta a-ok"><div><b>dia ' + an[a].dia + ' — ' + esc(an[a].c.nome) + '</b>' +
+          esc(an[a].c.cargo || '') + '</div></div>';
+  }
+  if (ha === '') { ha = '<div class="vazio">Ninguém faz aniversário este mês — ou faltam as datas de nascimento no cadastro.</div>'; }
+  el('eqAniver').innerHTML = ha;
+}
+
+function renderSemana(){
+  if (!el('swIni').value) {
+    var d = new Date();
+    var dow = d.getDay();
+    var diffSeg = (dow === 0 ? 6 : dow - 1);
+    var seg = new Date(d.getFullYear(), d.getMonth(), d.getDate() - diffSeg);
+    var m = seg.getMonth() + 1; var dd = seg.getDate();
+    el('swIni').value = seg.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (dd < 10 ? '0' + dd : dd);
+    calcFimSemana();
+  }
+  var at = ativos();
+  var h = '';
+  if (at.length === 0) {
+    h = '<div class="vazio">Cadastre a equipe primeiro.</div>';
+  }
+  for (var i = 0; i < at.length; i++) {
+    var c = at[i];
+    h += '<div style="border-top:1px solid var(--borda);padding-top:10px;margin-top:12px">' +
+      '<b>' + esc(c.nome) + '</b> <span class="pos">' + esc(c.cargo) + '</span>' +
+      '<div class="grade2">' +
+      '<div><label>Faltas não justificadas</label><input type="number" min="0" id="sw_f_' + c.id + '" value="0"></div>' +
+      '<div><label>Faltas justificadas</label><input type="number" min="0" id="sw_j_' + c.id + '" value="0"></div>' +
+      '<div><label>Atrasos (minutos no total)</label><input type="number" min="0" id="sw_a_' + c.id + '" value="0"></div>' +
+      '<div><label>Abonos (dias)</label><input type="number" min="0" id="sw_b_' + c.id + '" value="0"></div>' +
+      '<div><label>Horas extras 50% (dia útil)</label><input type="number" step="0.5" min="0" id="sw_h5_' + c.id + '" value="0"></div>' +
+      '<div><label>Horas extras 100% (domingo/feriado)</label><input type="number" step="0.5" min="0" id="sw_h1_' + c.id + '" value="0"></div>' +
+      '</div>' +
+      '<label>Observação da semana</label><input type="text" id="sw_o_' + c.id + '" placeholder="opcional">' +
+      '</div>';
+  }
+  el('swLista').innerHTML = h;
+
+  var t = '<tr><th>Semana</th><th>Pessoa</th><th>Dias</th><th>Faltas</th><th>Atrasos</th><th>HE 50</th><th>HE 100</th><th></th></tr>';
+  var ls = DB.LANCAMENTOS.slice().sort(function(a,b){ return dataMs(b.semanaIni) - dataMs(a.semanaIni); });
+  if (ls.length === 0) {
+    t += '<tr><td colspan="8" class="vazio">Nenhuma semana lançada ainda.</td></tr>';
+  }
+  for (var j = 0; j < ls.length && j < 80; j++) {
+    var l = ls[j];
+    t += '<tr><td>' + dataBR(l.semanaIni) + '</td><td>' + esc(nomeColab(l.colabId)) + '</td>' +
+      '<td>' + esc(l.diasUteis) + '</td><td>' + esc(l.faltas) + '</td><td>' + esc(l.atrasosMin) + ' min</td>' +
+      '<td>' + esc(l.he50) + '</td><td>' + esc(l.he100) + '</td>' +
+      '<td><button class="mini" onclick="excluirReg(\'LANCAMENTOS\',\'' + l.id + '\')">Excluir</button></td></tr>';
+  }
+  el('swHist').innerHTML = t;
+}
+
+function calcFimSemana(){
+  var v = el('swIni').value;
+  if (!v) { return; }
+  var p = v.split('-');
+  var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  d.setDate(d.getDate() + 5);
+  var m = d.getMonth() + 1; var dd = d.getDate();
+  el('swFim').value = d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (dd < 10 ? '0' + dd : dd);
+}
+
+function salvarSemana(){
+  var ini = el('swIni').value;
+  var fim = el('swFim').value;
+  if (!ini) { toast('Informe o início da semana'); return; }
+  var dias = num(el('swDias').value);
+  var at = ativos();
+  if (at.length === 0) { toast('Nenhum colaborador ativo'); return; }
+  var fila = [];
+  for (var i = 0; i < at.length; i++) {
+    var c = at[i];
+    var existente = '';
+    for (var k = 0; k < DB.LANCAMENTOS.length; k++) {
+      var L = DB.LANCAMENTOS[k];
+      if (String(L.colabId) === String(c.id) && String(L.semanaIni).substring(0,10) === ini) {
+        existente = L.id;
+      }
+    }
+    fila.push({
+      id: existente,
+      colabId: c.id, semanaIni: ini, semanaFim: fim, diasUteis: dias,
+      faltas: num(el('sw_f_' + c.id).value),
+      faltasJust: num(el('sw_j_' + c.id).value),
+      atrasosMin: num(el('sw_a_' + c.id).value),
+      he50: num(el('sw_h5_' + c.id).value),
+      he100: num(el('sw_h1_' + c.id).value),
+      abonos: num(el('sw_b_' + c.id).value),
+      obs: el('sw_o_' + c.id).value
+    });
+  }
+  enviarFila(fila, 0);
+}
+
+function enviarFila(fila, i){
+  if (i >= fila.length) { toast('Semana salva — ' + fila.length + ' lançamentos'); carregar(); return; }
+  chamar({ acao:'salvar', tabela:'LANCAMENTOS', registro: fila[i] }, function(){
+    enviarFila(fila, i + 1);
+  });
+}
+
+function renderHoras(){
+  var at = ativos();
+  var t = '<tr><th>Pessoa</th><th>HE lançadas</th><th>Atrasos</th><th>Pagas</th><th>Compensadas</th><th>Saldo</th><th>Situação</th></tr>';
+  if (at.length === 0) { t += '<tr><td colspan="7" class="vazio">Sem colaboradores.</td></tr>'; }
+  for (var i = 0; i < at.length; i++) {
+    var s = saldoHoras(at[i].id);
+    var cl = s.saldo >= 20 ? 't-vermelho' : (s.saldo >= 8 ? 't-amarelo' : 't-verde');
+    var tx = s.saldo >= 20 ? 'decidir agora' : (s.saldo >= 8 ? 'acompanhar' : 'sob controle');
+    t += '<tr><td><b>' + esc(at[i].nome) + '</b></td><td>' + hhmm(s.credito) + '</td>' +
+      '<td>' + hhmm(s.atrasos) + '</td><td>' + hhmm(s.pago) + '</td><td>' + hhmm(s.compensado) + '</td>' +
+      '<td><b>' + hhmm(s.saldo) + '</b></td><td><span class="tag ' + cl + '">' + tx + '</span></td></tr>';
+  }
+  el('bhTabela').innerHTML = t;
+
+  var m = '<tr><th>Data</th><th>Pessoa</th><th>Tipo</th><th>Horas</th><th>Valor pago</th><th>Obs</th><th></th></tr>';
+  var mv = DB.MOVHORAS.slice().sort(function(a,b){ return dataMs(b.data) - dataMs(a.data); });
+  if (mv.length === 0) { m += '<tr><td colspan="7" class="vazio">Nenhuma hora paga ou compensada registrada.</td></tr>'; }
+  for (var j = 0; j < mv.length; j++) {
+    m += '<tr><td>' + dataBR(mv[j].data) + '</td><td>' + esc(nomeColab(mv[j].colabId)) + '</td>' +
+      '<td>' + esc(mv[j].tipo) + '</td><td>' + hhmm(num(mv[j].horas)) + '</td><td>' + moeda(mv[j].valor) + '</td>' +
+      '<td>' + esc(mv[j].obs) + '</td>' +
+      '<td><button class="mini" onclick="abrirMov(\'' + mv[j].id + '\')">Editar</button></td></tr>';
+  }
+  el('bhMov').innerHTML = m;
+}
+
+function renderFerias(){
+  var t = '<tr><th>Pessoa</th><th>Período aquisitivo</th><th>Direito</th><th>Gozados</th><th>Saldo</th><th>Gozo</th><th>Prazo legal</th><th></th></tr>';
+  if (DB.FERIAS.length === 0) { t += '<tr><td colspan="8" class="vazio">Nenhum período registrado. Registre um por pessoa, por ano de trabalho.</td></tr>'; }
+  var fs = DB.FERIAS.slice().sort(function(a,b){ return feriasRisco(a).dias - feriasRisco(b).dias; });
+  for (var i = 0; i < fs.length; i++) {
+    var f = fs[i];
+    var r = feriasRisco(f);
+    var cl = r.nivel === 'vermelho' ? 't-vermelho' : (r.nivel === 'amarelo' ? 't-amarelo' : (r.nivel === 'verde' ? 't-verde' : 't-cinza'));
+    t += '<tr><td><b>' + esc(nomeColab(f.colabId)) + '</b></td>' +
+      '<td>' + dataBR(f.aquisitivoIni) + ' a ' + dataBR(f.aquisitivoFim) + '</td>' +
+      '<td>' + esc(f.diasDireito) + '</td><td>' + esc(f.diasGozados) + '</td>' +
+      '<td><b>' + (num(f.diasDireito) - num(f.diasGozados)) + '</b></td>' +
+      '<td>' + (f.inicio ? dataBR(f.inicio) + ' a ' + dataBR(f.fim) : '—') + '</td>' +
+      '<td><span class="tag ' + cl + '">' + r.texto + '</span></td>' +
+      '<td><button class="mini" onclick="abrirFerias(\'' + f.id + '\')">Editar</button></td></tr>';
+  }
+  el('feTabela').innerHTML = t;
+}
+
+function renderDocs(){
+  var t = '<tr><th>Pessoa</th><th>Documento</th><th>Número</th><th>Vencimento</th><th>Onde está</th><th>Digital</th><th></th></tr>';
+  if (DB.DOCUMENTOS.length === 0) { t += '<tr><td colspan="7" class="vazio">Nenhum documento registrado.</td></tr>'; }
+  for (var i = 0; i < DB.DOCUMENTOS.length; i++) {
+    var d = DB.DOCUMENTOS[i];
+    var venc = dataMs(d.vencimento);
+    var tag = '';
+    if (venc) {
+      var fal = diasEntre(hojeMs(), venc);
+      tag = fal < 0 ? '<span class="tag t-vermelho">vencido</span>' :
+            (fal <= 60 ? '<span class="tag t-amarelo">' + fal + ' dias</span>' : '<span class="tag t-verde">ok</span>');
+    }
+    t += '<tr><td>' + esc(nomeColab(d.colabId)) + '</td><td><b>' + esc(d.documento) + '</b></td>' +
+      '<td>' + esc(d.numero) + '</td><td>' + (venc ? dataBR(d.vencimento) + ' ' + tag : 'sem validade') + '</td>' +
+      '<td>' + esc(d.arquivado) + '</td><td>' + esc(d.digital) + '</td>' +
+      '<td><button class="mini" onclick="abrirDoc(\'' + d.id + '\')">Editar</button></td></tr>';
+  }
+  el('doTabela').innerHTML = t;
+}
+
+function gerarChecklistDocs(){
+  var at = ativos();
+  var h = '';
+  for (var i = 0; i < at.length; i++) {
+    var f = docsFaltando(at[i].id);
+    h += '<div class="alerta ' + (f.length === 0 ? 'a-ok' : (f.length >= 3 ? 'a-alto' : 'a-medio')) + '"><div><b>' +
+      esc(at[i].nome) + '</b>' + (f.length === 0 ? 'Pasta completa.' : 'Falta: ' + f.join(', ')) + '</div></div>';
+  }
+  if (h === '') { h = '<div class="vazio">Sem colaboradores ativos.</div>'; }
+  abrirModalLivre('Checklist da pasta funcional',
+    'Estes são os 9 documentos que toda pasta precisa ter. Resolva de cima para baixo.', h);
+}
+
+function renderOcor(){
+  var t = '<tr><th>Data</th><th>Pessoa</th><th>Tipo</th><th>Gravidade</th><th>Descrição</th><th>Ação tomada</th><th>Status</th><th></th></tr>';
+  if (DB.OCORRENCIAS.length === 0) { t += '<tr><td colspan="8" class="vazio">Nenhuma ocorrência registrada.</td></tr>'; }
+  var os = DB.OCORRENCIAS.slice().sort(function(a,b){ return dataMs(b.data) - dataMs(a.data); });
+  for (var i = 0; i < os.length; i++) {
+    var o = os[i];
+    var g = normStr(o.gravidade);
+    var cl = g === 'grave' ? 't-vermelho' : (g === 'média' || g === 'media' ? 't-amarelo' : 't-cinza');
+    var st = normStr(o.status);
+    var scl = (st === 'resolvida' || st === 'encerrada') ? 't-verde' : 't-amarelo';
+    t += '<tr><td>' + dataBR(o.data) + '</td><td><b>' + esc(nomeColab(o.colabId)) + '</b></td>' +
+      '<td>' + esc(o.tipo) + '</td><td><span class="tag ' + cl + '">' + esc(o.gravidade || '—') + '</span></td>' +
+      '<td>' + esc(o.descricao) + '</td><td>' + esc(o.acao) + '</td>' +
+      '<td><span class="tag ' + scl + '">' + esc(o.status || 'aberta') + '</span></td>' +
+      '<td><button class="mini" onclick="abrirOcor(\'' + o.id + '\')">Editar</button></td></tr>';
+  }
+  el('ocTabela').innerHTML = t;
+}
+
+function renderRemun(){
+  var at = ativos();
+  var t = '<tr><th>Pessoa</th><th>Salário base</th><th>Benefícios</th><th>Bonificação mês</th><th>Horas pagas</th><th>Custo total</th></tr>';
+  var soma = 0;
+  for (var i = 0; i < at.length; i++) {
+    var c = custoMes(at[i].id);
+    soma = soma + c.total;
+    t += '<tr><td><b>' + esc(at[i].nome) + '</b></td><td>' + moeda(c.base) + '</td>' +
+      '<td>' + moeda(c.beneficios) + '</td><td>' + moeda(c.bonificacoes) + '</td>' +
+      '<td>' + moeda(c.horas) + '</td><td><b>' + moeda(c.total) + '</b></td></tr>';
+  }
+  if (at.length === 0) { t += '<tr><td colspan="6" class="vazio">Sem colaboradores.</td></tr>'; }
+  else { t += '<tr><td colspan="5" style="text-align:right"><b>TOTAL</b></td><td><b>' + moeda(soma) + '</b></td></tr>'; }
+  el('rmCusto').innerHTML = t;
+
+  var s = '<tr><th>Data</th><th>Pessoa</th><th>De</th><th>Para</th><th>%</th><th>Motivo</th><th></th></tr>';
+  var hs = DB.HISTSALARIO.slice().sort(function(a,b){ return dataMs(b.data) - dataMs(a.data); });
+  if (hs.length === 0) { s += '<tr><td colspan="7" class="vazio">Nenhum aumento registrado. Histórico salarial é o que sustenta uma negociação e evita alegação de desvio de função.</td></tr>'; }
+  for (var j = 0; j < hs.length; j++) {
+    s += '<tr><td>' + dataBR(hs[j].data) + '</td><td>' + esc(nomeColab(hs[j].colabId)) + '</td>' +
+      '<td>' + moeda(hs[j].salarioAnterior) + '</td><td><b>' + moeda(hs[j].salarioNovo) + '</b></td>' +
+      '<td>' + esc(hs[j].percentual) + '%</td><td>' + esc(hs[j].motivo) + '</td>' +
+      '<td><button class="mini" onclick="abrirSal(\'' + hs[j].id + '\')">Editar</button></td></tr>';
+  }
+  el('rmSal').innerHTML = s;
+
+  var b = '<tr><th>Pessoa</th><th>Benefício</th><th>Valor</th><th>Periodicidade</th><th>Desde</th><th>Status</th><th></th></tr>';
+  if (DB.BENEFICIOS.length === 0) { b += '<tr><td colspan="7" class="vazio">Nenhum benefício registrado.</td></tr>'; }
+  for (var k = 0; k < DB.BENEFICIOS.length; k++) {
+    var bf = DB.BENEFICIOS[k];
+    b += '<tr><td>' + esc(nomeColab(bf.colabId)) + '</td><td><b>' + esc(bf.beneficio) + '</b></td>' +
+      '<td>' + moeda(bf.valor) + '</td><td>' + esc(bf.periodicidade) + '</td><td>' + dataBR(bf.inicio) + '</td>' +
+      '<td>' + esc(bf.status || 'ativo') + '</td>' +
+      '<td><button class="mini" onclick="abrirBenef(\'' + bf.id + '\')">Editar</button></td></tr>';
+  }
+  el('rmBenef').innerHTML = b;
+
+  var n = '<tr><th>Mês</th><th>Pessoa</th><th>Tipo</th><th>Valor</th><th>Critério</th><th>Status</th><th></th></tr>';
+  if (DB.BONIFICACOES.length === 0) { n += '<tr><td colspan="7" class="vazio">Nenhuma bonificação registrada. Bonificação sem critério escrito vira expectativa de direito adquirido — escreva o critério sempre.</td></tr>'; }
+  for (var q = 0; q < DB.BONIFICACOES.length; q++) {
+    var bn = DB.BONIFICACOES[q];
+    n += '<tr><td>' + esc(bn.mesRef) + '</td><td>' + esc(nomeColab(bn.colabId)) + '</td>' +
+      '<td>' + esc(bn.tipo) + '</td><td><b>' + moeda(bn.valor) + '</b></td><td>' + esc(bn.criterio) + '</td>' +
+      '<td>' + esc(bn.status) + '</td>' +
+      '<td><button class="mini" onclick="abrirBonif(\'' + bn.id + '\')">Editar</button></td></tr>';
+  }
+  el('rmBonif').innerHTML = n;
+}
+
+function preencherSelectColab(){
+  var s = el('epColab');
+  var h = '';
+  var at = DB.COLABORADORES;
+  for (var i = 0; i < at.length; i++) {
+    h += '<option value="' + at[i].id + '">' + esc(at[i].nome) + '</option>';
+  }
+  s.innerHTML = h;
+  if (!el('epMes').value) {
+    var d = new Date();
+    var m = d.getMonth() + 1;
+    el('epMes').value = d.getFullYear() + '-' + (m < 10 ? '0' + m : m);
+  }
+}
+
+function gerarEspelho(){
+  var id = el('epColab').value;
+  var mes = el('epMes').value;
+  if (!id || !mes) { toast('Escolha a pessoa e o mês'); return; }
+  var c = colab(id);
+  var p = mes.split('-');
+  var ini = new Date(Number(p[0]), Number(p[1]) - 1, 1).getTime();
+  var fim = new Date(Number(p[0]), Number(p[1]), 0, 23, 59).getTime();
+  var lan = porColab('LANCAMENTOS', id);
+  var linhas = '';
+  var td = 0, tf = 0, tj = 0, ta = 0, t5 = 0, t1 = 0;
+  for (var i = 0; i < lan.length; i++) {
+    var ms = dataMs(lan[i].semanaIni);
+    if (ms < ini || ms > fim) { continue; }
+    td += num(lan[i].diasUteis); tf += num(lan[i].faltas); tj += num(lan[i].faltasJust);
+    ta += num(lan[i].atrasosMin); t5 += num(lan[i].he50); t1 += num(lan[i].he100);
+    linhas += '<tr><td>' + dataBR(lan[i].semanaIni) + ' a ' + dataBR(lan[i].semanaFim) + '</td>' +
+      '<td>' + num(lan[i].diasUteis) + '</td><td>' + num(lan[i].faltas) + '</td>' +
+      '<td>' + num(lan[i].faltasJust) + '</td><td>' + num(lan[i].atrasosMin) + '</td>' +
+      '<td>' + num(lan[i].he50) + '</td><td>' + num(lan[i].he100) + '</td>' +
+      '<td>' + esc(lan[i].obs) + '</td></tr>';
+  }
+  if (linhas === '') { linhas = '<tr><td colspan="8" class="vazio">Sem lançamentos neste mês.</td></tr>'; }
+  var h = '<div class="card"><h2>ESPELHO DE PONTO — REVESTIR CONSTRUÇÃO E ACABAMENTO</h2>' +
+    '<p style="font-size:13px;margin:0 0 12px">' +
+    '<b>Colaborador:</b> ' + esc(c ? c.nome : '') + ' &nbsp;·&nbsp; <b>Cargo:</b> ' + esc(c ? c.cargo : '') +
+    ' &nbsp;·&nbsp; <b>Admissão:</b> ' + dataBR(c ? c.admissao : '') +
+    '<br><b>Mês de referência:</b> ' + mes.split('-')[1] + '/' + mes.split('-')[0] + '</p>' +
+    '<div class="rolagem"><table><tr><th>Semana</th><th>Dias úteis</th><th>Faltas</th><th>Faltas just.</th>' +
+    '<th>Atrasos (min)</th><th>HE 50%</th><th>HE 100%</th><th>Observação</th></tr>' + linhas +
+    '<tr><td><b>TOTAL</b></td><td><b>' + td + '</b></td><td><b>' + tf + '</b></td><td><b>' + tj + '</b></td>' +
+    '<td><b>' + ta + '</b></td><td><b>' + t5 + '</b></td><td><b>' + t1 + '</b></td><td></td></tr></table></div>' +
+    '<p style="font-size:12.5px;margin-top:14px">Frequência do mês: <b>' +
+    (td > 0 ? (((td - tf - tj) / td) * 100).toFixed(1) : '0') + '%</b> &nbsp;·&nbsp; Saldo de banco de horas na data: <b>' +
+    hhmm(saldoHoras(id).saldo) + '</b></p>' +
+    '<p style="font-size:12px;margin-top:20px">Declaro que os registros acima conferem com a jornada por mim cumprida no período.</p>' +
+    '<div style="display:flex;gap:30px;margin-top:34px;font-size:12px">' +
+    '<div style="flex:1;border-top:1px solid #333;padding-top:5px">Assinatura do colaborador</div>' +
+    '<div style="flex:1;border-top:1px solid #333;padding-top:5px">Assinatura da empresa &nbsp;·&nbsp; Data: ___/___/______</div>' +
+    '</div></div>';
+  el('epSaida').innerHTML = h;
+  toast('Espelho gerado — use Imprimir');
+}
+
+/* ============================================================
+   MODAIS
+   ============================================================ */
+function fecharModal(){ el('mdBox').className = 'modal'; }
+
+function abrirModalLivre(tit, dica, html){
+  _mdTabela = '';
+  _mdReg = null;
+  _mdCampos = [];
+  el('mdTit').textContent = tit;
+  el('mdDica').textContent = dica;
+  el('mdCorpo').innerHTML = html;
+  el('mdOk').style.display = 'none';
+  el('mdDel').style.display = 'none';
+  el('mdBox').className = 'modal on';
+}
+
+function abrirForm(tabela, id, tit, dica, campos){
+  _mdTabela = tabela;
+  _mdCampos = campos;
+  _mdReg = null;
+  var arr = DB[tabela] || [];
+  for (var i = 0; i < arr.length; i++) {
+    if (String(arr[i].id) === String(id)) { _mdReg = arr[i]; }
+  }
+  var h = '<div class="grade2">';
+  for (var c = 0; c < campos.length; c++) {
+    var f = campos[c];
+    var v = _mdReg && _mdReg[f.k] !== undefined ? _mdReg[f.k] : (f.def !== undefined ? f.def : '');
+    h += '<div' + (f.full ? ' style="grid-column:1/-1"' : '') + '><label>' + f.lb + '</label>';
+    if (f.t === 'select') {
+      h += '<select id="fd_' + f.k + '">';
+      for (var o = 0; o < f.op.length; o++) {
+        h += '<option value="' + esc(f.op[o]) + '"' + (normStr(f.op[o]) === normStr(v) ? ' selected' : '') + '>' + esc(f.op[o]) + '</option>';
+      }
+      h += '</select>';
+    } else if (f.t === 'colab') {
+      h += '<select id="fd_' + f.k + '">';
+      for (var p = 0; p < DB.COLABORADORES.length; p++) {
+        var cc = DB.COLABORADORES[p];
+        h += '<option value="' + cc.id + '"' + (String(cc.id) === String(v) ? ' selected' : '') + '>' + esc(cc.nome) + '</option>';
+      }
+      h += '</select>';
+    } else if (f.t === 'textarea') {
+      h += '<textarea id="fd_' + f.k + '">' + esc(v) + '</textarea>';
+    } else {
+      h += '<input type="' + (f.t || 'text') + '" id="fd_' + f.k + '" value="' + esc(v) + '"' +
+           (f.t === 'number' ? ' step="' + (f.step || '0.01') + '"' : '') + '>';
+    }
+    h += '</div>';
+  }
+  h += '</div>';
+  el('mdTit').textContent = tit;
+  el('mdDica').textContent = dica;
+  el('mdCorpo').innerHTML = h;
+  el('mdOk').style.display = '';
+  el('mdDel').style.display = _mdReg ? '' : 'none';
+  el('mdBox').className = 'modal on';
+}
+
+function mdSalvar(){
+  if (!_mdTabela) { fecharModal(); return; }
+  var reg = { id: _mdReg ? _mdReg.id : '' };
+  for (var i = 0; i < _mdCampos.length; i++) {
+    var k = _mdCampos[i].k;
+    var e = el('fd_' + k);
+    if (e) { reg[k] = e.value; }
+  }
+  if (_mdTabela === 'HISTSALARIO' && num(reg.salarioAnterior) > 0) {
+    reg.percentual = (((num(reg.salarioNovo) / num(reg.salarioAnterior)) - 1) * 100).toFixed(1);
+  }
+  fecharModal();
+  salvarReg(_mdTabela, reg);
+}
+
+function mdExcluir(){
+  if (!_mdTabela || !_mdReg) { return; }
+  var t = _mdTabela; var id = _mdReg.id;
+  fecharModal();
+  excluirReg(t, id);
+}
+
+function abrirColab(id){
+  abrirForm('COLABORADORES', id, id ? 'Editar colaborador' : 'Novo colaborador',
+    'Nome, cargo, admissão, contrato e salário são o mínimo. O resto pode entrar depois.', [
+    { k:'nome', lb:'Nome completo', full:true },
+    { k:'cargo', lb:'Cargo' },
+    { k:'setor', lb:'Setor', t:'select', op:['Vendas','Administrativo','Logística/Entrega','Estoque','Financeiro','Outro'] },
+    { k:'admissao', lb:'Data de admissão', t:'date' },
+    { k:'contrato', lb:'Tipo de contrato', t:'select', op:['CLT','PJ','Experiência 45 dias','Experiência 90 dias','Estágio','Jovem Aprendiz','Autônomo'] },
+    { k:'salario', lb:'Salário base (R$)', t:'number' },
+    { k:'jornada', lb:'Jornada semanal (horas)', t:'number', def:'44' },
+    { k:'status', lb:'Situação', t:'select', op:['Ativo','Férias','Afastado','Aviso prévio','Desligado'] },
+    { k:'demissao', lb:'Data de desligamento', t:'date' },
+    { k:'cpf', lb:'CPF' },
+    { k:'telefone', lb:'Telefone' },
+    { k:'email', lb:'E-mail' },
+    { k:'nascimento', lb:'Data de nascimento', t:'date' },
+    { k:'ctps', lb:'CTPS' },
+    { k:'pis', lb:'PIS/PASEP' },
+    { k:'endereco', lb:'Endereço', full:true },
+    { k:'obs', lb:'Observações', t:'textarea', full:true }
+  ]);
+}
+
+function abrirMov(id){
+  abrirForm('MOVHORAS', id, id ? 'Editar movimentação' : 'Pagar ou compensar horas',
+    'Toda hora extra precisa sair do banco por uma destas portas. Registre o valor pago quando for pagamento.', [
+    { k:'colabId', lb:'Colaborador', t:'colab' },
+    { k:'data', lb:'Data', t:'date', def: isoHoje() },
+    { k:'tipo', lb:'Tipo', t:'select', op:['Pago em folha','Compensado com folga','Ajuste (crédito manual)'] },
+    { k:'horas', lb:'Horas', t:'number', step:'0.5' },
+    { k:'valor', lb:'Valor pago (R$) — só se for pagamento', t:'number' },
+    { k:'obs', lb:'Observação', t:'textarea', full:true }
+  ]);
+}
+
+function abrirFerias(id){
+  abrirForm('FERIAS', id, id ? 'Editar período de férias' : 'Registrar período de férias',
+    'Período aquisitivo = 12 meses trabalhados. O prazo para conceder é até 12 meses depois do fim dele.', [
+    { k:'colabId', lb:'Colaborador', t:'colab' },
+    { k:'aquisitivoIni', lb:'Início do período aquisitivo', t:'date' },
+    { k:'aquisitivoFim', lb:'Fim do período aquisitivo', t:'date' },
+    { k:'diasDireito', lb:'Dias de direito', t:'number', def:'30' },
+    { k:'diasGozados', lb:'Dias já gozados', t:'number', def:'0' },
+    { k:'inicio', lb:'Início das férias', t:'date' },
+    { k:'fim', lb:'Fim das férias', t:'date' },
+    { k:'status', lb:'Situação', t:'select', op:['A programar','Programada','Em gozo','Concluída','Vendida (1/3)'] },
+    { k:'obs', lb:'Observações', t:'textarea', full:true }
+  ]);
+}
+
+function abrirDoc(id){
+  abrirForm('DOCUMENTOS', id, id ? 'Editar documento' : 'Registrar documento',
+    'Registre também onde o papel está fisicamente guardado — é isso que faz a pasta funcional existir de verdade.', [
+    { k:'colabId', lb:'Colaborador', t:'colab' },
+    { k:'documento', lb:'Documento', t:'select', op:DOCS_OBRIGATORIOS.concat(['Exame periódico','Exame demissional','Advertência','Aviso de férias','Recibo de EPI','Termo de rescisão','Outro']) },
+    { k:'numero', lb:'Número / referência' },
+    { k:'emissao', lb:'Data de emissão', t:'date' },
+    { k:'vencimento', lb:'Vencimento (se houver)', t:'date' },
+    { k:'arquivado', lb:'Onde está arquivado' },
+    { k:'digital', lb:'Tem cópia digital?', t:'select', op:['Sim','Não'] },
+    { k:'obs', lb:'Observações', t:'textarea', full:true }
+  ]);
+}
+
+function abrirOcor(id){
+  abrirForm('OCORRENCIAS', id, id ? 'Editar ocorrência' : 'Registrar ocorrência',
+    'Descreva fato, não opinião: o que aconteceu, quando, qual a consequência. Registro objetivo é o que se sustenta.', [
+    { k:'colabId', lb:'Colaborador', t:'colab' },
+    { k:'data', lb:'Data', t:'date', def: isoHoje() },
+    { k:'tipo', lb:'Tipo', t:'select', op:['Atraso reincidente','Falta não justificada','Conduta','Erro operacional','Atendimento ao cliente','Segurança do trabalho','Advertência verbal','Advertência escrita','Suspensão','Elogio / destaque','Outro'] },
+    { k:'gravidade', lb:'Gravidade', t:'select', op:['Leve','Média','Grave'] },
+    { k:'descricao', lb:'O que aconteceu', t:'textarea', full:true },
+    { k:'acao', lb:'Ação tomada', t:'textarea', full:true },
+    { k:'responsavel', lb:'Responsável pela ação' },
+    { k:'dataResolucao', lb:'Data de resolução', t:'date' },
+    { k:'status', lb:'Situação', t:'select', op:['Aberta','Em acompanhamento','Resolvida'] }
+  ]);
+}
+
+function abrirSal(id){
+  abrirForm('HISTSALARIO', id, id ? 'Editar aumento' : 'Registrar aumento de salário',
+    'O percentual é calculado sozinho. Depois de salvar, atualize também o salário no cadastro da pessoa.', [
+    { k:'colabId', lb:'Colaborador', t:'colab' },
+    { k:'data', lb:'Data do aumento', t:'date', def: isoHoje() },
+    { k:'salarioAnterior', lb:'Salário anterior (R$)', t:'number' },
+    { k:'salarioNovo', lb:'Novo salário (R$)', t:'number' },
+    { k:'motivo', lb:'Motivo', t:'select', op:['Mérito','Promoção','Dissídio / convenção','Equiparação','Acordo','Outro'] },
+    { k:'obs', lb:'Observações', t:'textarea', full:true }
+  ]);
+}
+
+function abrirBenef(id){
+  abrirForm('BENEFICIOS', id, id ? 'Editar benefício' : 'Registrar benefício',
+    'Benefício habitual entra no custo real da pessoa e, em alguns casos, na base de cálculo. Registre todos.', [
+    { k:'colabId', lb:'Colaborador', t:'colab' },
+    { k:'beneficio', lb:'Benefício', t:'select', op:['Vale transporte','Vale alimentação','Vale refeição','Plano de saúde','Plano odontológico','Seguro de vida','Combustível','Celular','Cesta básica','Outro'] },
+    { k:'valor', lb:'Valor (R$)', t:'number' },
+    { k:'periodicidade', lb:'Periodicidade', t:'select', op:['Mensal','Semanal','Diário','Anual'] },
+    { k:'inicio', lb:'Desde', t:'date' },
+    { k:'fim', lb:'Até (se encerrado)', t:'date' },
+    { k:'status', lb:'Situação', t:'select', op:['Ativo','Encerrado'] },
+    { k:'obs', lb:'Observações', t:'textarea', full:true }
+  ]);
+}
+
+function abrirBonif(id){
+  abrirForm('BONIFICACOES', id, id ? 'Editar bonificação' : 'Registrar bonificação',
+    'Escreva sempre o critério. Bonificação paga sem regra escrita e repetida vira direito adquirido.', [
+    { k:'colabId', lb:'Colaborador', t:'colab' },
+    { k:'mesRef', lb:'Mês de referência (MM/AAAA)' },
+    { k:'tipo', lb:'Tipo', t:'select', op:['Meta de vendas','Produtividade','Assiduidade','Campanha','Reconhecimento','Participação em resultado','Outro'] },
+    { k:'valor', lb:'Valor (R$)', t:'number' },
+    { k:'criterio', lb:'Critério que gerou o pagamento', t:'textarea', full:true },
+    { k:'status', lb:'Situação', t:'select', op:['A pagar','Pago'] },
+    { k:'obs', lb:'Observações', t:'textarea', full:true }
+  ]);
+}
+
+/* ============================================================
+   INICIO
+   ============================================================ */
+carregar();
+</script>
+</body>
+</html>
