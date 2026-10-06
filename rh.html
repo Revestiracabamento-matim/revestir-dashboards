@@ -14,7 +14,7 @@
 body{margin:0;background:var(--bg);color:var(--txt);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-size:15px;padding-bottom:40px}
-header{background:var(--teal);color:#fff;padding:14px 16px;
+header{position:relative;background:var(--teal);color:#fff;padding:14px 16px;
   padding-top:calc(14px + env(safe-area-inset-top))}
 header h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.3px}
 header p{margin:2px 0 0;font-size:12px;opacity:.85}
@@ -90,21 +90,43 @@ textarea{min-height:70px;resize:vertical}
 </head>
 <body>
 
+<div id="loginTela" style="position:fixed;inset:0;background:var(--teal);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:26px;max-width:380px;width:100%">
+    <h1 style="margin:0 0 4px;font-size:19px;color:var(--teal)">REVESTIR</h1>
+    <p style="margin:0 0 18px;font-size:13px;color:var(--txt2)">Gestão de Pessoas</p>
+    <label>Usuário</label>
+    <input type="text" id="lgUser" autocapitalize="none" autocorrect="off">
+    <label>Senha</label>
+    <input type="password" id="lgSenha" onkeydown="if(event.key==='Enter'){entrar();}">
+    <div class="linha-bt" style="margin-top:16px">
+      <button class="bt" style="width:100%" onclick="entrar()">Entrar</button>
+    </div>
+    <p id="lgErro" style="font-size:13px;color:var(--vermelho);margin:10px 0 0;display:none"></p>
+  </div>
+</div>
+
 <header>
   <h1>REVESTIR — Gestão de Pessoas</h1>
   <p id="hdSub">Carregando...</p>
+  <div id="hdEmpresaBox" style="margin-top:8px;display:none">
+    <select id="hdEmpresa" onchange="trocarEmpresa()" style="width:auto;max-width:280px;padding:6px 10px;font-size:13px;border-radius:8px;border:none;font-weight:600;color:var(--teal)"></select>
+  </div>
+  <button class="mini" onclick="sair()" style="position:absolute;right:14px;top:14px;color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.12)">Sair</button>
 </header>
 
 <nav>
   <button id="nvPainel" class="on" onclick="irPara('Painel')">Painel</button>
   <button id="nvEquipe" onclick="irPara('Equipe')">Equipe</button>
   <button id="nvSemana" onclick="irPara('Semana')">Lançar Semana</button>
+  <button id="nvPonto" onclick="irPara('Ponto')">Cartão de Ponto</button>
   <button id="nvHoras" onclick="irPara('Horas')">Banco de Horas</button>
   <button id="nvFerias" onclick="irPara('Ferias')">Férias</button>
   <button id="nvDocs" onclick="irPara('Docs')">Documentos</button>
   <button id="nvOcor" onclick="irPara('Ocor')">Ocorrências</button>
   <button id="nvRemun" onclick="irPara('Remun')">Remuneração</button>
-  <button id="nvEspelho" onclick="irPara('Espelho')">Espelho de Ponto</button>
+  <button id="nvEspelho" onclick="irPara('Espelho')">Espelho / Assinatura</button>
+  <button id="nvEmpresas" onclick="irPara('Empresas')">Empresas</button>
+  <button id="nvUsuarios" onclick="irPara('Usuarios')">Acessos</button>
 </nav>
 
 <main>
@@ -181,6 +203,42 @@ textarea{min-height:70px;resize:vertical}
   <div class="card">
     <h2>Semanas já lançadas</h2>
     <div class="rolagem"><table id="swHist"></table></div>
+  </div>
+</div>
+
+<!-- CARTAO DE PONTO -->
+<div id="pgPonto" class="pag">
+  <div class="aviso">
+    <b>Lance o cartão de ponto do mês e o sistema faz o resto.</b><br>
+    Você digita só os horários de entrada e saída. Ele calcula sozinho: horas trabalhadas,
+    horas extras de 50%, horas extras de 100% (domingo e feriado), atrasos e o saldo do banco de horas.
+    Dia sem horário digitado não conta nada — marque o tipo do dia (folga, falta, férias, atestado).
+  </div>
+  <div class="card">
+    <h2>Lançar mês</h2>
+    <div class="grade2">
+      <div><label>Colaborador</label><select id="ptColab"></select></div>
+      <div><label>Mês</label><input type="month" id="ptMes"></div>
+    </div>
+    <div class="linha-bt" style="margin-top:12px">
+      <button class="bt" onclick="montarPonto()">Abrir o mês</button>
+      <button class="bt gh" onclick="repetirPadrao()">Preencher dias úteis com o mesmo horário</button>
+    </div>
+    <div class="grade2" id="ptPadraoBox" style="display:none">
+      <div><label>Entrada</label><input type="time" id="ptpE1" value="08:00"></div>
+      <div><label>Saída almoço</label><input type="time" id="ptpS1" value="12:00"></div>
+      <div><label>Volta almoço</label><input type="time" id="ptpE2" value="13:30"></div>
+      <div><label>Saída</label><input type="time" id="ptpS2" value="18:00"></div>
+      <div style="grid-column:1/-1"><button class="bt lar" onclick="aplicarPadrao()">Aplicar nos dias úteis</button></div>
+    </div>
+  </div>
+  <div class="kpis" id="ptResumo"></div>
+  <div class="card">
+    <h2>Dias do mês <span>o cálculo atualiza enquanto você digita</span></h2>
+    <div class="rolagem"><table id="ptTabela"></table></div>
+    <div class="linha-bt" style="margin-top:14px">
+      <button class="bt lar" onclick="salvarPonto()">Salvar o mês inteiro</button>
+    </div>
   </div>
 </div>
 
@@ -299,6 +357,45 @@ textarea{min-height:70px;resize:vertical}
 
 </main>
 
+<div id="pgEmpresas" class="pag">
+  <div class="aviso">
+    <b>Cada CNPJ é um empregador diferente.</b><br>
+    Folha, FGTS, INSS, férias e rescisão são apurados por empresa, nunca somados.
+    Cadastre aqui os CNPJs e depois diga, no cadastro de cada pessoa, em qual delas ela está alocada.
+    O seletor no topo da tela filtra o sistema inteiro por empresa.
+  </div>
+  <div class="linha-bt">
+    <button class="bt" onclick="abrirEmpresa('')">+ Nova empresa</button>
+  </div>
+  <div class="kpis" id="emKpis"></div>
+  <div class="card">
+    <h2>Empresas cadastradas</h2>
+    <div class="rolagem"><table id="emTabela"></table></div>
+  </div>
+  <div class="card">
+    <h2>Custo de pessoal por empresa <span>mês corrente</span></h2>
+    <div class="rolagem"><table id="emCusto"></table></div>
+  </div>
+</div>
+
+<div id="pgUsuarios" class="pag">
+  <div class="aviso">
+    <b>Dois níveis de acesso.</b><br>
+    <b>Gerencial</b> (você e o Rogerlan): vê tudo — salários, folha, ocorrências, documentos, banco de horas.<br>
+    <b>Operacional</b>: entra, lança o cartão de ponto e mais nada. Salário, folha, ocorrências e documentos
+    nem chegam ao aparelho dessa pessoa — o bloqueio é feito no servidor, não só na tela.<br>
+    Deixe o campo <b>Colaborador</b> vazio para quem lança o ponto de toda a equipe. Preencha com uma pessoa
+    para limitar o acesso ao ponto dela apenas.
+  </div>
+  <div class="linha-bt">
+    <button class="bt" onclick="abrirUsuario('')">+ Novo acesso</button>
+  </div>
+  <div class="card">
+    <h2>Quem tem acesso ao sistema</h2>
+    <div class="rolagem"><table id="usTabela"></table></div>
+  </div>
+</div>
+
 <!-- MODAL GENERICO -->
 <div class="modal" id="mdBox">
   <div class="modal-in">
@@ -322,12 +419,16 @@ textarea{min-height:70px;resize:vertical}
 var PORTA = 'https://script.google.com/macros/s/AKfycbx0nhJ50N88AhfEDojDD2XtNOtwklLu1bkSU93jf_afyi0YgeYrFBtMDtPPnN8gPkQD/exec';
 
 var DB = {
-  COLABORADORES: [], LANCAMENTOS: [], MOVHORAS: [], FERIAS: [],
+  EMPRESAS: [], USUARIOS: [], COLABORADORES: [], PONTO: [], LANCAMENTOS: [], MOVHORAS: [], FERIAS: [],
   DOCUMENTOS: [], OCORRENCIAS: [], HISTSALARIO: [], BENEFICIOS: [], BONIFICACOES: []
 };
 
 var DOCS_OBRIGATORIOS = ['CTPS','RG','CPF','Comprovante de endereço','Exame admissional',
   'Contrato de trabalho','Ficha de registro','Vale transporte (opção)','Dados bancários'];
+
+var SESSAO = { usuario: '', senha: '', nome: '', papel: '', colabId: '', empresaId: '' };
+
+var EMPRESA_ATIVA = '';
 
 var _mdTabela = '';
 var _mdReg = null;
@@ -426,7 +527,18 @@ function ativos(){
   var out = [];
   for (var i = 0; i < DB.COLABORADORES.length; i++) {
     var c = DB.COLABORADORES[i];
-    if (normStr(c.status) !== 'desligado' && normStr(c.status) !== 'inativo') { out.push(c); }
+    if (normStr(c.status) === 'desligado' || normStr(c.status) === 'inativo') { continue; }
+    if (!naEmpresaAtiva(c)) { continue; }
+    out.push(c);
+  }
+  return out;
+}
+
+/* Colaboradores visiveis no filtro de empresa, incluindo desligados */
+function todosDaEmpresa(){
+  var out = [];
+  for (var i = 0; i < DB.COLABORADORES.length; i++) {
+    if (naEmpresaAtiva(DB.COLABORADORES[i])) { out.push(DB.COLABORADORES[i]); }
   }
   return out;
 }
@@ -449,6 +561,8 @@ function chamar(payload, cb){
     if (cb) { cb({ ok:false, erro:'porta nao configurada' }); }
     return;
   }
+  payload.usuario = SESSAO.usuario;
+  payload.senha = SESSAO.senha;
   fetch(PORTA, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -459,6 +573,7 @@ function chamar(payload, cb){
 }
 
 function carregar(){
+  if (!SESSAO.usuario) { return; }
   el('hdSub').textContent = 'Carregando dados...';
   chamar({ acao:'ler' }, function(j){
     if (j && j.ok && j.dados) {
@@ -466,7 +581,7 @@ function carregar(){
       for (var i = 0; i < ks.length; i++) {
         DB[ks[i]] = j.dados[ks[i]] || [];
       }
-      el('hdSub').textContent = ativos().length + ' pessoas ativas · dados de ' + new Date().toLocaleDateString('pt-BR');
+      el('hdSub').textContent = SESSAO.nome + ' · ' + (SESSAO.papel === 'gerencial' ? 'acesso gerencial' : 'lançamento de ponto') + ' · ' + new Date().toLocaleDateString('pt-BR');
     } else {
       el('hdSub').textContent = 'Sem conexão com a base — veja o passo a passo de instalação';
     }
@@ -480,6 +595,8 @@ function salvarReg(tabela, reg, cb){
       toast('Salvo');
       carregar();
       if (cb) { cb(); }
+    } else if (j && j.erro === 'SEM_PERMISSAO') {
+      toast('Seu acesso não permite esta ação');
     } else {
       toast('Erro ao salvar: ' + (j && j.erro ? j.erro : 'desconhecido'));
     }
@@ -494,9 +611,60 @@ function excluirReg(tabela, id){
 }
 
 /* ============================================================
+   LOGIN E PAPEL
+   ============================================================ */
+function entrar(){
+  var u = el('lgUser').value.trim();
+  var p = el('lgSenha').value;
+  if (!u || !p) { mostraErroLogin('Preencha usuário e senha'); return; }
+  SESSAO.usuario = u; SESSAO.senha = p;
+  el('lgErro').style.display = 'none';
+  chamar({ acao:'login' }, function(j){
+    if (j && j.ok) {
+      SESSAO.nome = j.nome; SESSAO.papel = j.papel; SESSAO.colabId = j.colabId || ''; SESSAO.empresaId = j.empresaId || '';
+      el('loginTela').style.display = 'none';
+      aplicarPapel();
+      carregar();
+    } else {
+      SESSAO.usuario = ''; SESSAO.senha = '';
+      mostraErroLogin(j && j.erro === 'LOGIN_INVALIDO' ? 'Usuário ou senha incorretos' : 'Não consegui conectar. Tente de novo.');
+    }
+  });
+}
+
+function mostraErroLogin(msg){
+  var e = el('lgErro');
+  e.textContent = msg;
+  e.style.display = '';
+}
+
+function sair(){
+  SESSAO = { usuario:'', senha:'', nome:'', papel:'', colabId:'', empresaId:'' };
+  EMPRESA_ATIVA = '';
+  var ks = Object.keys(DB);
+  for (var i = 0; i < ks.length; i++) { DB[ks[i]] = []; }
+  el('lgSenha').value = '';
+  el('loginTela').style.display = 'flex';
+  renderAll();
+}
+
+var ABAS_OPERACIONAL = ['Ponto'];
+
+function aplicarPapel(){
+  var ger = SESSAO.papel === 'gerencial';
+  for (var i = 0; i < PAGS.length; i++) {
+    var nv = el('nv' + PAGS[i]);
+    if (!nv) { continue; }
+    var liberada = ger || ABAS_OPERACIONAL.indexOf(PAGS[i]) > -1;
+    nv.style.display = liberada ? '' : 'none';
+  }
+  irPara(ger ? 'Painel' : 'Ponto');
+}
+
+/* ============================================================
    NAVEGACAO
    ============================================================ */
-var PAGS = ['Painel','Equipe','Semana','Horas','Ferias','Docs','Ocor','Remun','Espelho'];
+var PAGS = ['Painel','Equipe','Semana','Ponto','Horas','Ferias','Docs','Ocor','Remun','Espelho','Empresas','Usuarios'];
 
 function irPara(p){
   for (var i = 0; i < PAGS.length; i++) {
@@ -509,12 +677,128 @@ function irPara(p){
 }
 
 /* ============================================================
+   EMPRESAS (CNPJ)
+   ============================================================ */
+function empresa(id){
+  for (var i = 0; i < DB.EMPRESAS.length; i++) {
+    if (String(DB.EMPRESAS[i].id) === String(id)) { return DB.EMPRESAS[i]; }
+  }
+  return null;
+}
+
+function nomeEmpresa(id){
+  var e = empresa(id);
+  if (e) { return e.nome || e.razaoSocial || '(sem nome)'; }
+  return id ? '(empresa removida)' : 'sem empresa';
+}
+
+/* true se o colaborador entra no filtro de empresa ativo */
+function naEmpresaAtiva(c){
+  if (!EMPRESA_ATIVA) { return true; }
+  return String(c.empresaId || '') === String(EMPRESA_ATIVA);
+}
+
+function preencherSeletorEmpresa(){
+  var sel = el('hdEmpresa');
+  var box = el('hdEmpresaBox');
+  if (!sel) { return; }
+  if (DB.EMPRESAS.length === 0) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  var h = '<option value="">Todas as empresas</option>';
+  for (var i = 0; i < DB.EMPRESAS.length; i++) {
+    var e = DB.EMPRESAS[i];
+    if (normStr(e.status) === 'inativa') { continue; }
+    h += '<option value="' + e.id + '">' + esc(e.nome || e.razaoSocial) + '</option>';
+  }
+  sel.innerHTML = h;
+  sel.value = EMPRESA_ATIVA;
+}
+
+function trocarEmpresa(){
+  EMPRESA_ATIVA = el('hdEmpresa').value;
+  renderAll();
+  toast(EMPRESA_ATIVA ? 'Mostrando apenas ' + nomeEmpresa(EMPRESA_ATIVA) : 'Mostrando todas as empresas');
+}
+
+function abrirEmpresa(id){
+  abrirForm('EMPRESAS', id, id ? 'Editar empresa' : 'Nova empresa',
+    'Use um nome curto e reconhecível — é ele que aparece no seletor do topo e nos relatórios.', [
+    { k:'nome', lb:'Nome curto (ex: Revestir Loja)' },
+    { k:'cnpj', lb:'CNPJ' },
+    { k:'razaoSocial', lb:'Razão social', full:true },
+    { k:'status', lb:'Situação', t:'select', op:['Ativa','Inativa'] },
+    { k:'obs', lb:'Observações', t:'textarea', full:true }
+  ]);
+}
+
+function renderEmpresas(){
+  var t = '<tr><th>Nome</th><th>CNPJ</th><th>Razão social</th><th>Pessoas</th><th>Situação</th><th></th></tr>';
+  if (DB.EMPRESAS.length === 0) {
+    t += '<tr><td colspan="6" class="vazio">Nenhuma empresa cadastrada. Comece pelos seus CNPJs.</td></tr>';
+  }
+  for (var i = 0; i < DB.EMPRESAS.length; i++) {
+    var e = DB.EMPRESAS[i];
+    var n = 0;
+    for (var j = 0; j < DB.COLABORADORES.length; j++) {
+      var c = DB.COLABORADORES[j];
+      if (String(c.empresaId) === String(e.id) && normStr(c.status) !== 'desligado') { n++; }
+    }
+    t += '<tr><td><b>' + esc(e.nome) + '</b></td><td>' + esc(e.cnpj) + '</td>' +
+      '<td>' + esc(e.razaoSocial) + '</td><td>' + n + '</td>' +
+      '<td><span class="tag ' + (normStr(e.status) === 'inativa' ? 't-cinza' : 't-verde') + '">' + esc(e.status || 'Ativa') + '</span></td>' +
+      '<td><button class="mini" onclick="abrirEmpresa(\'' + e.id + '\')">Editar</button></td></tr>';
+  }
+  el('emTabela').innerHTML = t;
+
+  var semEmpresa = 0;
+  for (var k = 0; k < DB.COLABORADORES.length; k++) {
+    var cc = DB.COLABORADORES[k];
+    if (normStr(cc.status) === 'desligado') { continue; }
+    if (!cc.empresaId) { semEmpresa++; }
+  }
+  var hk = '';
+  hk += kpi('Empresas cadastradas', DB.EMPRESAS.length, 'seus CNPJs');
+  hk += kpi('Sem empresa definida', semEmpresa, semEmpresa > 0 ? 'corrija — a folha fica errada' : 'todos alocados');
+  el('emKpis').innerHTML = hk;
+
+  var cu = '<tr><th>Empresa</th><th>Pessoas</th><th>Salários</th><th>Benefícios</th><th>Bonificações</th><th>Custo total</th></tr>';
+  var linhas = DB.EMPRESAS.slice();
+  linhas.push({ id: '', nome: 'Sem empresa definida' });
+  var totalGeral = 0;
+  for (var m = 0; m < linhas.length; m++) {
+    var eid = linhas[m].id;
+    var n2 = 0, base = 0, ben = 0, bon = 0, tot = 0;
+    for (var p = 0; p < DB.COLABORADORES.length; p++) {
+      var col = DB.COLABORADORES[p];
+      if (normStr(col.status) === 'desligado' || normStr(col.status) === 'inativo') { continue; }
+      if (String(col.empresaId || '') !== String(eid)) { continue; }
+      var cm = custoMes(col.id);
+      n2++; base += cm.base; ben += cm.beneficios; bon += cm.bonificacoes; tot += cm.total;
+    }
+    if (n2 === 0 && eid === '') { continue; }
+    totalGeral += tot;
+    cu += '<tr><td><b>' + esc(linhas[m].nome) + '</b></td><td>' + n2 + '</td>' +
+      '<td>' + moeda(base) + '</td><td>' + moeda(ben) + '</td><td>' + moeda(bon) + '</td>' +
+      '<td><b>' + moeda(tot) + '</b></td></tr>';
+  }
+  cu += '<tr><td colspan="5" style="text-align:right"><b>TOTAL DO GRUPO</b></td><td><b>' + moeda(totalGeral) + '</b></td></tr>';
+  el('emCusto').innerHTML = cu;
+}
+
+/* ============================================================
    CALCULOS DE NEGOCIO
    ============================================================ */
 
 /* Saldo de banco de horas de um colaborador */
 function saldoHoras(id){
   var credito = 0, debito = 0;
+  var pts = porColab('PONTO', id);
+  var cc = colab(id);
+  for (var z = 0; z < pts.length; z++) {
+    var dd = calcDia(pts[z], cc);
+    credito = credito + dd.he50 + dd.he100;
+    debito = debito + dd.deficit;
+  }
   var lan = porColab('LANCAMENTOS', id);
   for (var i = 0; i < lan.length; i++) {
     credito = credito + num(lan[i].he50) + num(lan[i].he100);
@@ -553,6 +837,18 @@ function freqMes(id){
       semanas = semanas + 1;
     }
   }
+  var mesIso = d.getFullYear() + '-' + ((d.getMonth() + 1) < 10 ? '0' : '') + (d.getMonth() + 1);
+  var tp = totaisPonto(id, mesIso);
+  var ptsMes = pontoDe(id, mesIso);
+  var diasPrev = 0;
+  for (var z = 0; z < ptsMes.length; z++) {
+    if (calcDia(ptsMes[z], colab(id)).prev > 0) { diasPrev++; }
+  }
+  dias = dias + diasPrev;
+  faltas = faltas + tp.faltas;
+  just = just + tp.faltasJust;
+  he = he + tp.he50 + tp.he100;
+  atrasos = atrasos + Math.round(tp.deficit * 60);
   var pres = dias - faltas - just;
   var pct = dias > 0 ? (pres / dias) * 100 : 0;
   return { dias:dias, faltas:faltas, just:just, atrasos:atrasos, he:he, pct:pct, semanas:semanas };
@@ -691,8 +987,9 @@ function equipeFiltrada(){
   var ct = el('fqContrato') ? el('fqContrato').value : '';
   var bu = normStr(el('fqBusca') ? el('fqBusca').value : '');
   var out = [];
-  for (var i = 0; i < DB.COLABORADORES.length; i++) {
-    var c = DB.COLABORADORES[i];
+  var base = todosDaEmpresa();
+  for (var i = 0; i < base.length; i++) {
+    var c = base[i];
     var s = normStr(c.status);
     if (st === 'ativos') {
       if (s === 'desligado' || s === 'inativo') { continue; }
@@ -727,9 +1024,255 @@ function preencherFiltros(){
 }
 
 /* ============================================================
+   CARTAO DE PONTO
+   ============================================================ */
+var TIPOS_DIA = ['Dia útil','Sábado','Domingo','Feriado','Folga','Falta','Falta justificada','Férias','Atestado','Afastamento'];
+var DIAS_SEM = ['dom','seg','ter','qua','qui','sex','sáb'];
+
+function minHora(t){
+  if (!t) { return null; }
+  var p = String(t).split(':');
+  if (p.length < 2) { return null; }
+  var h = Number(p[0]); var m = Number(p[1]);
+  if (isNaN(h) || isNaN(m)) { return null; }
+  return h * 60 + m;
+}
+
+function jornadaPrevista(c, tipo){
+  var dia = c && num(c.jornadaDia) > 0 ? num(c.jornadaDia) : 8;
+  var sab = c && num(c.jornadaSab) > 0 ? num(c.jornadaSab) : 4;
+  if (tipo === 'Dia útil') { return dia; }
+  if (tipo === 'Sábado') { return sab; }
+  if (tipo === 'Falta') { return 0; }
+  return 0;
+}
+
+/* Calcula um dia de ponto */
+function calcDia(reg, c){
+  var tipo = reg.tipoDia || 'Dia útil';
+  var e1 = minHora(reg.e1), s1 = minHora(reg.s1), e2 = minHora(reg.e2), s2 = minHora(reg.s2);
+  var mins = 0;
+  if (e1 !== null && s1 !== null && s1 > e1) { mins = mins + (s1 - e1); }
+  if (e2 !== null && s2 !== null && s2 > e2) { mins = mins + (s2 - e2); }
+  if (e1 !== null && s2 !== null && s1 === null && e2 === null && s2 > e1) { mins = s2 - e1; }
+  var trab = mins / 60;
+  var prev = jornadaPrevista(c, tipo);
+  var he50 = 0, he100 = 0, deficit = 0;
+  if (tipo === 'Domingo' || tipo === 'Feriado') {
+    he100 = trab;
+  } else if (tipo === 'Folga' || tipo === 'Férias' || tipo === 'Atestado' ||
+             tipo === 'Falta justificada' || tipo === 'Afastamento') {
+    he50 = trab;
+  } else if (tipo === 'Falta') {
+    var p0 = c && num(c.jornadaDia) > 0 ? num(c.jornadaDia) : 8;
+    deficit = p0;
+  } else {
+    if (trab > prev) { he50 = trab - prev; }
+    else if (trab > 0) { deficit = prev - trab; }
+    else { deficit = 0; }
+  }
+  return { trab: trab, prev: prev, he50: he50, he100: he100, deficit: deficit,
+           saldo: he50 + he100 - deficit, tipo: tipo };
+}
+
+function isoDia(v){
+  if (!v) { return ''; }
+  var t = String(v);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) { return t; }
+  var ms = dataMs(t);
+  if (!ms) { return t.substring(0,10); }
+  var d = new Date(ms);
+  var m = d.getMonth() + 1; var dia = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (dia < 10 ? '0' + dia : dia);
+}
+
+function pontoDe(id, mesIso){
+  var out = [];
+  for (var i = 0; i < DB.PONTO.length; i++) {
+    var p = DB.PONTO[i];
+    if (String(p.colabId) !== String(id)) { continue; }
+    if (mesIso && isoDia(p.data).substring(0,7) !== mesIso) { continue; }
+    out.push(p);
+  }
+  return out;
+}
+
+function totaisPonto(id, mesIso){
+  var c = colab(id);
+  var regs = pontoDe(id, mesIso);
+  var t = { trab:0, he50:0, he100:0, deficit:0, prev:0, faltas:0, faltasJust:0, diasTrab:0 };
+  for (var i = 0; i < regs.length; i++) {
+    var d = calcDia(regs[i], c);
+    t.trab += d.trab; t.he50 += d.he50; t.he100 += d.he100;
+    t.deficit += d.deficit; t.prev += d.prev;
+    if (d.tipo === 'Falta') { t.faltas++; }
+    if (d.tipo === 'Falta justificada') { t.faltasJust++; }
+    if (d.trab > 0) { t.diasTrab++; }
+  }
+  t.saldo = t.he50 + t.he100 - t.deficit;
+  return t;
+}
+
+function preencherPtColab(){
+  var sel = el('ptColab');
+  if (!sel) { return; }
+  var v = sel.value;
+  var h = '';
+  var lista = todosDaEmpresa();
+  for (var i = 0; i < lista.length; i++) {
+    h += '<option value="' + lista[i].id + '">' + esc(lista[i].nome) + '</option>';
+  }
+  sel.innerHTML = h;
+  if (v) { sel.value = v; }
+  if (!el('ptMes').value) {
+    var d = new Date(); var m = d.getMonth() + 1;
+    el('ptMes').value = d.getFullYear() + '-' + (m < 10 ? '0' + m : m);
+  }
+}
+
+function montarPonto(){
+  var id = el('ptColab').value;
+  var mes = el('ptMes').value;
+  if (!id || !mes) { toast('Escolha a pessoa e o mês'); return; }
+  var c = colab(id);
+  var p = mes.split('-');
+  var ano = Number(p[0]); var mm = Number(p[1]);
+  var qtd = new Date(ano, mm, 0).getDate();
+  var existentes = {};
+  var regs = pontoDe(id, mes);
+  for (var r = 0; r < regs.length; r++) { existentes[isoDia(regs[r].data)] = regs[r]; }
+
+  var t = '<tr><th>Dia</th><th>Tipo do dia</th><th>Entrada</th><th>Saída almoço</th>' +
+          '<th>Volta</th><th>Saída</th><th>Trabalhadas</th><th>Saldo do dia</th></tr>';
+  for (var d = 1; d <= qtd; d++) {
+    var data = new Date(ano, mm - 1, d);
+    var iso = ano + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (d < 10 ? '0' + d : d);
+    var dw = data.getDay();
+    var ex = existentes[iso];
+    var tipoPadrao = dw === 0 ? 'Domingo' : (dw === 6 ? 'Sábado' : 'Dia útil');
+    var tipo = ex && ex.tipoDia ? ex.tipoDia : tipoPadrao;
+    var sel = '<select id="pt_t_' + d + '" onchange="recalcPonto()">';
+    for (var k = 0; k < TIPOS_DIA.length; k++) {
+      sel += '<option value="' + TIPOS_DIA[k] + '"' + (TIPOS_DIA[k] === tipo ? ' selected' : '') + '>' + TIPOS_DIA[k] + '</option>';
+    }
+    sel += '</select>';
+    var fundo = (dw === 0) ? ' style="background:#fdf3f2"' : (dw === 6 ? ' style="background:#fdfaf2"' : '');
+    t += '<tr' + fundo + '><td><b>' + (d < 10 ? '0' + d : d) + '</b><div class="pos">' + DIAS_SEM[dw] + '</div></td>' +
+      '<td>' + sel + '</td>' +
+      '<td><input type="time" id="pt_e1_' + d + '" value="' + esc(ex ? ex.e1 : '') + '" oninput="recalcPonto()"></td>' +
+      '<td><input type="time" id="pt_s1_' + d + '" value="' + esc(ex ? ex.s1 : '') + '" oninput="recalcPonto()"></td>' +
+      '<td><input type="time" id="pt_e2_' + d + '" value="' + esc(ex ? ex.e2 : '') + '" oninput="recalcPonto()"></td>' +
+      '<td><input type="time" id="pt_s2_' + d + '" value="' + esc(ex ? ex.s2 : '') + '" oninput="recalcPonto()"></td>' +
+      '<td id="pt_tr_' + d + '">—</td><td id="pt_sd_' + d + '">—</td></tr>';
+  }
+  el('ptTabela').innerHTML = t;
+  el('ptPadraoBox').style.display = '';
+  recalcPonto();
+}
+
+function lerLinhaPonto(d){
+  return {
+    tipoDia: el('pt_t_' + d) ? el('pt_t_' + d).value : 'Dia útil',
+    e1: el('pt_e1_' + d) ? el('pt_e1_' + d).value : '',
+    s1: el('pt_s1_' + d) ? el('pt_s1_' + d).value : '',
+    e2: el('pt_e2_' + d) ? el('pt_e2_' + d).value : '',
+    s2: el('pt_s2_' + d) ? el('pt_s2_' + d).value : ''
+  };
+}
+
+function recalcPonto(){
+  var id = el('ptColab').value;
+  var c = colab(id);
+  var mes = el('ptMes').value;
+  if (!mes) { return; }
+  var p = mes.split('-');
+  var qtd = new Date(Number(p[0]), Number(p[1]), 0).getDate();
+  var tt = { trab:0, he50:0, he100:0, deficit:0, prev:0, faltas:0 };
+  for (var d = 1; d <= qtd; d++) {
+    if (!el('pt_t_' + d)) { continue; }
+    var dia = calcDia(lerLinhaPonto(d), c);
+    tt.trab += dia.trab; tt.he50 += dia.he50; tt.he100 += dia.he100;
+    tt.deficit += dia.deficit; tt.prev += dia.prev;
+    if (dia.tipo === 'Falta') { tt.faltas++; }
+    el('pt_tr_' + d).textContent = dia.trab > 0 ? hhmm(dia.trab) : '—';
+    var cel = el('pt_sd_' + d);
+    if (dia.saldo === 0) { cel.innerHTML = '—'; }
+    else if (dia.saldo > 0) { cel.innerHTML = '<span class="tag t-verde">+' + hhmm(dia.saldo) + '</span>'; }
+    else { cel.innerHTML = '<span class="tag t-vermelho">' + hhmm(dia.saldo) + '</span>'; }
+  }
+  var saldo = tt.he50 + tt.he100 - tt.deficit;
+  var h = '';
+  h += kpi('Horas trabalhadas', hhmm(tt.trab), 'previsto ' + hhmm(tt.prev) + ' no mês');
+  h += kpi('Horas extras 50%', hhmm(tt.he50), 'dia útil e sábado');
+  h += kpi('Horas extras 100%', hhmm(tt.he100), 'domingo e feriado');
+  h += kpi('Atrasos e faltas', hhmm(tt.deficit), tt.faltas + ' falta(s) no mês');
+  h += kpi('Saldo do mês', hhmm(saldo), saldo > 0 ? 'a pagar ou compensar' : (saldo < 0 ? 'devendo horas' : 'zerado'));
+  el('ptResumo').innerHTML = h;
+}
+
+function repetirPadrao(){
+  var b = el('ptPadraoBox');
+  b.style.display = b.style.display === 'none' ? '' : 'none';
+}
+
+function aplicarPadrao(){
+  var mes = el('ptMes').value;
+  if (!mes) { toast('Abra o mês primeiro'); return; }
+  var p = mes.split('-');
+  var qtd = new Date(Number(p[0]), Number(p[1]), 0).getDate();
+  var e1 = el('ptpE1').value, s1 = el('ptpS1').value, e2 = el('ptpE2').value, s2 = el('ptpS2').value;
+  var n = 0;
+  for (var d = 1; d <= qtd; d++) {
+    if (!el('pt_t_' + d)) { continue; }
+    if (el('pt_t_' + d).value !== 'Dia útil') { continue; }
+    el('pt_e1_' + d).value = e1; el('pt_s1_' + d).value = s1;
+    el('pt_e2_' + d).value = e2; el('pt_s2_' + d).value = s2;
+    n++;
+  }
+  recalcPonto();
+  toast(n + ' dias úteis preenchidos — ajuste as exceções');
+}
+
+function salvarPonto(){
+  var id = el('ptColab').value;
+  var mes = el('ptMes').value;
+  if (!id || !mes) { toast('Escolha a pessoa e o mês'); return; }
+  var p = mes.split('-');
+  var ano = Number(p[0]); var mm = Number(p[1]);
+  var qtd = new Date(ano, mm, 0).getDate();
+  var existentes = {};
+  var regs = pontoDe(id, mes);
+  for (var r = 0; r < regs.length; r++) { existentes[isoDia(regs[r].data)] = regs[r].id; }
+  var fila = [];
+  for (var d = 1; d <= qtd; d++) {
+    if (!el('pt_t_' + d)) { continue; }
+    var lin = lerLinhaPonto(d);
+    var iso = ano + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (d < 10 ? '0' + d : d);
+    var vazio = !lin.e1 && !lin.s1 && !lin.e2 && !lin.s2;
+    var dw = new Date(ano, mm - 1, d).getDay();
+    var padrao = dw === 0 ? 'Domingo' : (dw === 6 ? 'Sábado' : 'Dia útil');
+    if (vazio && lin.tipoDia === padrao && !existentes[iso]) { continue; }
+    fila.push({ id: existentes[iso] || '', colabId: id, data: iso, tipoDia: lin.tipoDia,
+                e1: lin.e1, s1: lin.s1, e2: lin.e2, s2: lin.s2, obs: '' });
+  }
+  if (fila.length === 0) { toast('Nada para salvar'); return; }
+  enviarFilaPonto(fila, 0);
+}
+
+function enviarFilaPonto(fila, i){
+  if (i >= fila.length) { toast('Mês salvo — ' + fila.length + ' dias'); carregar(); return; }
+  el('hdSub').textContent = 'Salvando dia ' + (i + 1) + ' de ' + fila.length + '...';
+  chamar({ acao:'salvar', tabela:'PONTO', registro: fila[i] }, function(){
+    enviarFilaPonto(fila, i + 1);
+  });
+}
+
+/* ============================================================
    RENDER
    ============================================================ */
 function renderAll(){
+  preencherSeletorEmpresa();
+  renderEmpresas();
   preencherFiltros();
   renderPainel();
   renderEquipe();
@@ -739,7 +1282,9 @@ function renderAll(){
   renderDocs();
   renderOcor();
   renderRemun();
+  renderUsuarios();
   preencherSelectColab();
+  preencherPtColab();
 }
 
 function renderPainel(){
@@ -759,7 +1304,7 @@ function renderPainel(){
   }
 
   var h = '';
-  h += kpi('Pessoas ativas', at.length, DB.COLABORADORES.length + ' no cadastro');
+  h += kpi('Pessoas ativas', at.length, EMPRESA_ATIVA ? nomeEmpresa(EMPRESA_ATIVA) : 'todas as empresas');
   h += kpi('Custo de pessoal / mês', moeda(custoTotal), 'salário + benefícios + bônus');
   h += kpi('Banco de horas', hhmm(saldoTotal), saldoTotal > 0 ? 'passivo a pagar ou compensar' : 'sem passivo');
   h += kpi('Férias em risco', feriasRisc, feriasRisc > 0 ? 'atenção — risco de dobra' : 'nenhuma vencendo');
@@ -768,6 +1313,12 @@ function renderPainel(){
   el('pnKpis').innerHTML = h;
 
   var a = '';
+  var semEmp = 0;
+  for (var se = 0; se < at.length; se++) { if (!at[se].empresaId) { semEmp++; } }
+  if (semEmp > 0 && DB.EMPRESAS.length > 0) {
+    a += alerta('alto', semEmp + ' pessoa(s) sem empresa definida',
+      'Sem o CNPJ certo, a folha, o FGTS e o INSS saem errados e o custo de cada empresa fica distorcido. Corrija no cadastro de cada pessoa, em Equipe.');
+  }
   var pend = semanasPendentes();
   if (pend.length > 0) {
     a += alerta('alto', 'Lançamento semanal atrasado',
@@ -868,18 +1419,18 @@ function renderEquipe(){
   var txtMedia = (anosM > 0 ? anosM + 'a ' : '') + mesesM + 'm';
 
   var r = '';
-  r += kpi('Pessoas no filtro', lista.length, DB.COLABORADORES.length + ' no cadastro todo');
+  r += kpi('Pessoas no filtro', lista.length, todosDaEmpresa().length + ' nesta empresa');
   r += kpi('Custo do grupo / mês', moeda(soma), 'salário + benefícios + bônus');
   r += kpi('Salário médio', comSal > 0 ? moeda(somaSal / comSal) : 'R$ 0,00', comSal + ' com salário informado');
   r += kpi('Tempo médio de casa', txtMedia, 'quanto a equipe já rodou com você');
   r += kpi('Em experiência', expCount, expCount > 0 ? 'prazo correndo — veja a coluna' : 'nenhum contrato em prazo');
   el('eqResumo').innerHTML = r;
-  el('eqContagem').textContent = lista.length + ' de ' + DB.COLABORADORES.length;
+  el('eqContagem').textContent = lista.length + ' de ' + todosDaEmpresa().length + (EMPRESA_ATIVA ? ' · ' + nomeEmpresa(EMPRESA_ATIVA) : '');
 
-  var t = '<tr><th>Nome</th><th>Cargo</th><th>Setor</th><th>Admissão</th><th>Tempo de casa</th>' +
+  var t = '<tr><th>Nome</th><th>Empresa</th><th>Cargo</th><th>Setor</th><th>Admissão</th><th>Tempo de casa</th>' +
           '<th>Contrato</th><th>Salário</th><th>Situação</th><th>Pasta</th><th></th></tr>';
   if (lista.length === 0) {
-    t += '<tr><td colspan="10" class="vazio">Nenhuma pessoa neste filtro. Mude o filtro ou clique em "+ Novo colaborador".</td></tr>';
+    t += '<tr><td colspan="11" class="vazio">Nenhuma pessoa neste filtro. Mude o filtro ou clique em "+ Novo colaborador".</td></tr>';
   }
   for (var i = 0; i < lista.length; i++) {
     var c = lista[i];
@@ -895,7 +1446,9 @@ function renderEquipe(){
                    '<span class="tag t-amarelo">' + ex.faltam + ' dias</span>');
       txtCt = txtCt + '<div class="pos">termina ' + dataBR(new Date(ex.fim).toISOString().substring(0,10)) + ' ' + tagEx + '</div>';
     }
+    var tagEmp = c.empresaId ? esc(nomeEmpresa(c.empresaId)) : '<span class="tag t-vermelho">sem empresa</span>';
     t += '<tr><td><b>' + esc(c.nome) + '</b><div class="pos">' + esc(c.telefone || '') + '</div></td>' +
+      '<td>' + tagEmp + '</td>' +
       '<td>' + esc(c.cargo) + '</td><td>' + esc(c.setor) + '</td><td>' + dataBR(c.admissao) + '</td>' +
       '<td>' + tempoCasa(c.admissao).txt + '</td>' +
       '<td>' + txtCt + '</td><td>' + moeda(c.salario) + '</td>' +
@@ -1157,10 +1710,40 @@ function renderRemun(){
   el('rmBonif').innerHTML = n;
 }
 
+function renderUsuarios(){
+  var t = '<tr><th>Usuário</th><th>Nome</th><th>Acesso</th><th>Limitado a</th><th>Situação</th><th></th></tr>';
+  if (DB.USUARIOS.length === 0) {
+    t += '<tr><td colspan="6" class="vazio">Nenhum acesso cadastrado.</td></tr>';
+  }
+  for (var i = 0; i < DB.USUARIOS.length; i++) {
+    var u = DB.USUARIOS[i];
+    var ger = normStr(u.papel) === 'gerencial';
+    var alerta = String(u.senha) === 'TROCAR123' ? '<div class="pos" style="color:var(--vermelho)">senha padrão — troque</div>' : '';
+    t += '<tr><td><b>' + esc(u.usuario) + '</b>' + alerta + '</td><td>' + esc(u.nome) + '</td>' +
+      '<td><span class="tag ' + (ger ? 't-verde' : 't-amarelo') + '">' + esc(u.papel) + '</span></td>' +
+      '<td>' + (u.colabId ? esc(nomeColab(u.colabId)) : 'toda a equipe') + '</td>' +
+      '<td>' + esc(u.status || 'Ativo') + '</td>' +
+      '<td><button class="mini" onclick="abrirUsuario(\'' + u.id + '\')">Editar</button></td></tr>';
+  }
+  el('usTabela').innerHTML = t;
+}
+
+function abrirUsuario(id){
+  var ops = [{ k:'usuario', lb:'Usuário (sem espaço e sem acento)' },
+    { k:'senha', lb:'Senha' },
+    { k:'nome', lb:'Nome da pessoa' },
+    { k:'papel', lb:'Nível de acesso', t:'select', op:['gerencial','operacional'] },
+    { k:'empresaId', lb:'Limitar à empresa (vazio = todas)', t:'empresa' },
+    { k:'colabId', lb:'Limitar ao ponto de (vazio = toda a equipe)', t:'colabVazio' },
+    { k:'status', lb:'Situação', t:'select', op:['Ativo','Inativo'] }];
+  abrirForm('USUARIOS', id, id ? 'Editar acesso' : 'Novo acesso',
+    'Quem é operacional só consegue lançar cartão de ponto. Nada de salário, folha, ocorrência ou documento chega ao aparelho dessa pessoa.', ops);
+}
+
 function preencherSelectColab(){
   var s = el('epColab');
   var h = '';
-  var at = DB.COLABORADORES;
+  var at = todosDaEmpresa();
   for (var i = 0; i < at.length; i++) {
     h += '<option value="' + at[i].id + '">' + esc(at[i].nome) + '</option>';
   }
@@ -1177,42 +1760,96 @@ function gerarEspelho(){
   var mes = el('epMes').value;
   if (!id || !mes) { toast('Escolha a pessoa e o mês'); return; }
   var c = colab(id);
-  var p = mes.split('-');
-  var ini = new Date(Number(p[0]), Number(p[1]) - 1, 1).getTime();
-  var fim = new Date(Number(p[0]), Number(p[1]), 0, 23, 59).getTime();
+  var regs = pontoDe(id, mes);
+
+  if (regs.length > 0) {
+    var p = mes.split('-');
+    var ano = Number(p[0]); var mm = Number(p[1]);
+    var qtd = new Date(ano, mm, 0).getDate();
+    var mapa = {};
+    for (var r = 0; r < regs.length; r++) { mapa[isoDia(regs[r].data)] = regs[r]; }
+    var linhas = '';
+    var tt = { trab:0, he50:0, he100:0, def:0, prev:0 };
+    for (var d = 1; d <= qtd; d++) {
+      var iso = ano + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (d < 10 ? '0' + d : d);
+      var reg = mapa[iso];
+      var dw = new Date(ano, mm - 1, d).getDay();
+      if (!reg) {
+        linhas += '<tr><td>' + (d < 10 ? '0' + d : d) + '/' + (mm < 10 ? '0' + mm : mm) + '</td><td>' + DIAS_SEM[dw] +
+          '</td><td colspan="4" style="color:#6a7b7a">' + (dw === 0 ? 'Domingo' : (dw === 6 ? 'Sábado' : 'sem registro')) +
+          '</td><td>—</td><td>—</td><td>—</td></tr>';
+        continue;
+      }
+      var dia = calcDia(reg, c);
+      tt.trab += dia.trab; tt.he50 += dia.he50; tt.he100 += dia.he100;
+      tt.def += dia.deficit; tt.prev += dia.prev;
+      linhas += '<tr><td>' + (d < 10 ? '0' + d : d) + '/' + (mm < 10 ? '0' + mm : mm) + '</td><td>' + DIAS_SEM[dw] + '</td>' +
+        '<td>' + esc(reg.e1 || '—') + '</td><td>' + esc(reg.s1 || '—') + '</td>' +
+        '<td>' + esc(reg.e2 || '—') + '</td><td>' + esc(reg.s2 || '—') + '</td>' +
+        '<td>' + (dia.trab > 0 ? hhmm(dia.trab) : '—') + '</td>' +
+        '<td>' + (dia.he50 + dia.he100 > 0 ? hhmm(dia.he50 + dia.he100) : '—') + '</td>' +
+        '<td>' + esc(dia.tipo) + '</td></tr>';
+    }
+    var saldoMes = tt.he50 + tt.he100 - tt.def;
+    var h = '<div class="card"><h2>CARTÃO DE PONTO — REVESTIR CONSTRUÇÃO E ACABAMENTO</h2>' +
+      '<p style="font-size:13px;margin:0 0 12px"><b>Colaborador:</b> ' + esc(c ? c.nome : '') +
+      ' &nbsp;·&nbsp; <b>Cargo:</b> ' + esc(c ? c.cargo : '') +
+      ' &nbsp;·&nbsp; <b>Admissão:</b> ' + dataBR(c ? c.admissao : '') +
+      '<br><b>Mês de referência:</b> ' + mes.split('-')[1] + '/' + mes.split('-')[0] +
+      ' &nbsp;·&nbsp; <b>Jornada:</b> ' + (c && num(c.jornadaDia) > 0 ? num(c.jornadaDia) : 8) + 'h por dia útil, ' +
+      (c && num(c.jornadaSab) > 0 ? num(c.jornadaSab) : 4) + 'h aos sábados</p>' +
+      '<div class="rolagem"><table><tr><th>Dia</th><th></th><th>Entrada</th><th>S. almoço</th><th>Volta</th>' +
+      '<th>Saída</th><th>Trabalhadas</th><th>Extras</th><th>Situação</th></tr>' + linhas + '</table></div>' +
+      '<p style="font-size:13px;margin-top:14px">' +
+      '<b>Total trabalhado:</b> ' + hhmm(tt.trab) + ' &nbsp;·&nbsp; <b>Previsto:</b> ' + hhmm(tt.prev) +
+      '<br><b>Horas extras 50%:</b> ' + hhmm(tt.he50) + ' &nbsp;·&nbsp; <b>Horas extras 100%:</b> ' + hhmm(tt.he100) +
+      ' &nbsp;·&nbsp; <b>Atrasos e faltas:</b> ' + hhmm(tt.def) +
+      '<br><b>Saldo do mês:</b> ' + hhmm(saldoMes) +
+      ' &nbsp;·&nbsp; <b>Saldo acumulado do banco de horas:</b> ' + hhmm(saldoHoras(id).saldo) + '</p>' +
+      '<p style="font-size:12px;margin-top:20px">Declaro que os horários registrados acima conferem com a jornada por mim cumprida no período, e que as horas extras e compensações apuradas estão corretas.</p>' +
+      '<div style="display:flex;gap:30px;margin-top:34px;font-size:12px">' +
+      '<div style="flex:1;border-top:1px solid #333;padding-top:5px">Assinatura do colaborador</div>' +
+      '<div style="flex:1;border-top:1px solid #333;padding-top:5px">Assinatura da empresa &nbsp;·&nbsp; Data: ___/___/______</div>' +
+      '</div></div>';
+    el('epSaida').innerHTML = h;
+    toast('Cartão de ponto gerado — use Imprimir');
+    return;
+  }
+
+  var p2 = mes.split('-');
+  var ini = new Date(Number(p2[0]), Number(p2[1]) - 1, 1).getTime();
+  var fim = new Date(Number(p2[0]), Number(p2[1]), 0, 23, 59).getTime();
   var lan = porColab('LANCAMENTOS', id);
-  var linhas = '';
+  var ls = '';
   var td = 0, tf = 0, tj = 0, ta = 0, t5 = 0, t1 = 0;
   for (var i = 0; i < lan.length; i++) {
     var ms = dataMs(lan[i].semanaIni);
     if (ms < ini || ms > fim) { continue; }
     td += num(lan[i].diasUteis); tf += num(lan[i].faltas); tj += num(lan[i].faltasJust);
     ta += num(lan[i].atrasosMin); t5 += num(lan[i].he50); t1 += num(lan[i].he100);
-    linhas += '<tr><td>' + dataBR(lan[i].semanaIni) + ' a ' + dataBR(lan[i].semanaFim) + '</td>' +
+    ls += '<tr><td>' + dataBR(lan[i].semanaIni) + ' a ' + dataBR(lan[i].semanaFim) + '</td>' +
       '<td>' + num(lan[i].diasUteis) + '</td><td>' + num(lan[i].faltas) + '</td>' +
       '<td>' + num(lan[i].faltasJust) + '</td><td>' + num(lan[i].atrasosMin) + '</td>' +
-      '<td>' + num(lan[i].he50) + '</td><td>' + num(lan[i].he100) + '</td>' +
-      '<td>' + esc(lan[i].obs) + '</td></tr>';
+      '<td>' + num(lan[i].he50) + '</td><td>' + num(lan[i].he100) + '</td><td>' + esc(lan[i].obs) + '</td></tr>';
   }
-  if (linhas === '') { linhas = '<tr><td colspan="8" class="vazio">Sem lançamentos neste mês.</td></tr>'; }
-  var h = '<div class="card"><h2>ESPELHO DE PONTO — REVESTIR CONSTRUÇÃO E ACABAMENTO</h2>' +
-    '<p style="font-size:13px;margin:0 0 12px">' +
-    '<b>Colaborador:</b> ' + esc(c ? c.nome : '') + ' &nbsp;·&nbsp; <b>Cargo:</b> ' + esc(c ? c.cargo : '') +
-    ' &nbsp;·&nbsp; <b>Admissão:</b> ' + dataBR(c ? c.admissao : '') +
+  if (ls === '') {
+    el('epSaida').innerHTML = '<div class="card"><div class="vazio">Sem registro neste mês. Lance o cartão de ponto na aba "Cartão de Ponto" e gere de novo.</div></div>';
+    return;
+  }
+  var h2 = '<div class="card"><h2>ESPELHO DE PONTO — REVESTIR CONSTRUÇÃO E ACABAMENTO</h2>' +
+    '<p style="font-size:13px;margin:0 0 12px"><b>Colaborador:</b> ' + esc(c ? c.nome : '') +
+    ' &nbsp;·&nbsp; <b>Cargo:</b> ' + esc(c ? c.cargo : '') +
     '<br><b>Mês de referência:</b> ' + mes.split('-')[1] + '/' + mes.split('-')[0] + '</p>' +
     '<div class="rolagem"><table><tr><th>Semana</th><th>Dias úteis</th><th>Faltas</th><th>Faltas just.</th>' +
-    '<th>Atrasos (min)</th><th>HE 50%</th><th>HE 100%</th><th>Observação</th></tr>' + linhas +
+    '<th>Atrasos (min)</th><th>HE 50%</th><th>HE 100%</th><th>Observação</th></tr>' + ls +
     '<tr><td><b>TOTAL</b></td><td><b>' + td + '</b></td><td><b>' + tf + '</b></td><td><b>' + tj + '</b></td>' +
     '<td><b>' + ta + '</b></td><td><b>' + t5 + '</b></td><td><b>' + t1 + '</b></td><td></td></tr></table></div>' +
-    '<p style="font-size:12.5px;margin-top:14px">Frequência do mês: <b>' +
-    (td > 0 ? (((td - tf - tj) / td) * 100).toFixed(1) : '0') + '%</b> &nbsp;·&nbsp; Saldo de banco de horas na data: <b>' +
-    hhmm(saldoHoras(id).saldo) + '</b></p>' +
     '<p style="font-size:12px;margin-top:20px">Declaro que os registros acima conferem com a jornada por mim cumprida no período.</p>' +
     '<div style="display:flex;gap:30px;margin-top:34px;font-size:12px">' +
     '<div style="flex:1;border-top:1px solid #333;padding-top:5px">Assinatura do colaborador</div>' +
     '<div style="flex:1;border-top:1px solid #333;padding-top:5px">Assinatura da empresa &nbsp;·&nbsp; Data: ___/___/______</div>' +
     '</div></div>';
-  el('epSaida').innerHTML = h;
+  el('epSaida').innerHTML = h2;
   toast('Espelho gerado — use Imprimir');
 }
 
@@ -1250,6 +1887,20 @@ function abrirForm(tabela, id, tit, dica, campos){
       h += '<select id="fd_' + f.k + '">';
       for (var o = 0; o < f.op.length; o++) {
         h += '<option value="' + esc(f.op[o]) + '"' + (normStr(f.op[o]) === normStr(v) ? ' selected' : '') + '>' + esc(f.op[o]) + '</option>';
+      }
+      h += '</select>';
+    } else if (f.t === 'empresa') {
+      h += '<select id="fd_' + f.k + '"><option value="">— escolha a empresa —</option>';
+      for (var pe = 0; pe < DB.EMPRESAS.length; pe++) {
+        var ee = DB.EMPRESAS[pe];
+        h += '<option value="' + ee.id + '"' + (String(ee.id) === String(v) ? ' selected' : '') + '>' + esc(ee.nome || ee.razaoSocial) + '</option>';
+      }
+      h += '</select>';
+    } else if (f.t === 'colabVazio') {
+      h += '<select id="fd_' + f.k + '"><option value="">toda a equipe</option>';
+      for (var pz = 0; pz < DB.COLABORADORES.length; pz++) {
+        var cz = DB.COLABORADORES[pz];
+        h += '<option value="' + cz.id + '"' + (String(cz.id) === String(v) ? ' selected' : '') + '>' + esc(cz.nome) + '</option>';
       }
       h += '</select>';
     } else if (f.t === 'colab') {
@@ -1302,12 +1953,15 @@ function abrirColab(id){
   abrirForm('COLABORADORES', id, id ? 'Editar colaborador' : 'Novo colaborador',
     'Nome, cargo, admissão, contrato e salário são o mínimo. O resto pode entrar depois.', [
     { k:'nome', lb:'Nome completo', full:true },
+    { k:'empresaId', lb:'Empresa (CNPJ) em que está alocado', t:'empresa', full:true },
     { k:'cargo', lb:'Cargo' },
     { k:'setor', lb:'Setor', t:'select', op:['Vendas','Administrativo','Logística/Entrega','Estoque','Financeiro','Outro'] },
     { k:'admissao', lb:'Data de admissão', t:'date' },
     { k:'contrato', lb:'Tipo de contrato', t:'select', op:['CLT','PJ','Experiência 45 dias','Experiência 90 dias','Estágio','Jovem Aprendiz','Autônomo'] },
     { k:'salario', lb:'Salário base (R$)', t:'number' },
     { k:'jornada', lb:'Jornada semanal (horas)', t:'number', def:'44' },
+    { k:'jornadaDia', lb:'Horas por dia útil', t:'number', def:'8' },
+    { k:'jornadaSab', lb:'Horas no sábado', t:'number', def:'4' },
     { k:'status', lb:'Situação', t:'select', op:['Ativo','Férias','Afastado','Aviso prévio','Desligado'] },
     { k:'demissao', lb:'Data de desligamento', t:'date' },
     { k:'cpf', lb:'CPF' },
@@ -1419,7 +2073,7 @@ function abrirBonif(id){
 /* ============================================================
    INICIO
    ============================================================ */
-carregar();
+el('lgUser').focus();
 </script>
 </body>
 </html>
