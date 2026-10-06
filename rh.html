@@ -211,7 +211,11 @@ textarea{min-height:70px;resize:vertical}
   <div class="aviso">
     <b>Lance o cartão de ponto do mês e o sistema faz o resto.</b><br>
     Você digita só os horários de entrada e saída. Ele calcula sozinho: horas trabalhadas,
-    horas extras de 50%, horas extras de 100% (domingo e feriado), atrasos e o saldo do banco de horas.
+    horas extras de 50%, horas extras de 100% (domingo e feriado), atrasos e o saldo do banco de horas.<br>
+    <b>O almoço nunca conta como trabalho</b> e a jornada prevista já sai do horário combinado de cada pessoa.
+    Só vira hora extra o que passar do horário de saída. Variação de até 10 minutos no dia é desconsiderada.<br>
+    <b>Quem emendou o dia sem almoçar já aparece com hora extra sozinho:</b> basta não preencher a saída
+    e a volta do almoço. O sistema vê que trabalhou direto e lança a diferença como extra.
     Dia sem horário digitado não conta nada — marque o tipo do dia (folga, falta, férias, atestado).
   </div>
   <div class="card">
@@ -232,6 +236,7 @@ textarea{min-height:70px;resize:vertical}
       <div style="grid-column:1/-1"><button class="bt lar" onclick="aplicarPadrao()">Aplicar nos dias úteis</button></div>
     </div>
   </div>
+  <div class="aviso" id="ptHorario" style="background:#eafaf1;border-color:#9fdcbb"></div>
   <div class="kpis" id="ptResumo"></div>
   <div class="card">
     <h2>Dias do mês <span>o cálculo atualiza enquanto você digita</span></h2>
@@ -582,6 +587,11 @@ function carregar(){
         DB[ks[i]] = j.dados[ks[i]] || [];
       }
       el('hdSub').textContent = SESSAO.nome + ' · ' + (SESSAO.papel === 'gerencial' ? 'acesso gerencial' : 'lançamento de ponto') + ' · ' + new Date().toLocaleDateString('pt-BR');
+    } else if (j && j.erro === 'LOGIN_INVALIDO') {
+      el('hdSub').textContent = 'Sessão encerrada';
+      sair();
+      mostraErroLogin('Sua senha foi alterada. Entre de novo com a senha nova.');
+      return;
     } else {
       el('hdSub').textContent = 'Sem conexão com a base — veja o passo a passo de instalação';
     }
@@ -595,6 +605,10 @@ function salvarReg(tabela, reg, cb){
       toast('Salvo');
       carregar();
       if (cb) { cb(); }
+    } else if (j && j.erro === 'LOGIN_INVALIDO') {
+      toast('Sessão encerrada — entre de novo');
+      sair();
+      mostraErroLogin('Sua senha foi alterada. Entre de novo com a senha nova.');
     } else if (j && j.erro === 'SEM_PERMISSAO') {
       toast('Seu acesso não permite esta ação');
     } else {
@@ -1038,13 +1052,59 @@ function minHora(t){
   return h * 60 + m;
 }
 
+/* Tolerância legal: variação de até 10 minutos no dia não vira hora extra nem débito. */
+var TOLERANCIA_MIN = 10;
+
+/* Horas previstas a partir do horário combinado, já descontado o almoço */
+function horasDoHorario(entrada, saida, intervaloMin, reserva){
+  var e = minHora(entrada), sa = minHora(saida);
+  if (e === null || sa === null || sa <= e) { return reserva; }
+  var mins = (sa - e) - num(intervaloMin);
+  if (mins < 0) { mins = 0; }
+  return mins / 60;
+}
+
+function jornadaDiaUtil(c){
+  if (!c) { return 8; }
+  var reserva = num(c.jornadaDia) > 0 ? num(c.jornadaDia) : 8;
+  return horasDoHorario(c.horaEntrada, c.horaSaida, c.intervaloMin, reserva);
+}
+
+function jornadaSabado(c){
+  if (!c) { return 4; }
+  if (normStr(c.sabTrabalha) === 'não' || normStr(c.sabTrabalha) === 'nao') { return 0; }
+  var reserva = num(c.jornadaSab) > 0 ? num(c.jornadaSab) : 4;
+  return horasDoHorario(c.horaEntradaSab, c.horaSaidaSab, c.intervaloSabMin, reserva);
+}
+
 function jornadaPrevista(c, tipo){
-  var dia = c && num(c.jornadaDia) > 0 ? num(c.jornadaDia) : 8;
-  var sab = c && num(c.jornadaSab) > 0 ? num(c.jornadaSab) : 4;
-  if (tipo === 'Dia útil') { return dia; }
-  if (tipo === 'Sábado') { return sab; }
-  if (tipo === 'Falta') { return 0; }
+  if (tipo === 'Dia útil') { return jornadaDiaUtil(c); }
+  if (tipo === 'Sábado') { return jornadaSabado(c); }
   return 0;
+}
+
+/* Jornada semanal prevista pelo horário combinado */
+function jornadaSemanaPrevista(c){
+  return jornadaDiaUtil(c) * 5 + jornadaSabado(c);
+}
+
+/* Texto do horário combinado, para a tela e para o espelho */
+function textoHorario(c){
+  if (!c) { return ''; }
+  var t = '';
+  if (c.horaEntrada && c.horaSaida) {
+    t = c.horaEntrada + ' às ' + c.horaSaida + ', ' + (num(c.intervaloMin) || 0) + ' min de almoço';
+    t = t + ' (' + hhmm(jornadaDiaUtil(c)) + ' por dia)';
+    if (num(c.intervaloMin) === 0) { t = t.replace(', 0 min de almoço', ', sem intervalo'); }
+  }
+  var sab = jornadaSabado(c);
+  if (sab > 0 && c.horaEntradaSab && c.horaSaidaSab) {
+    t = t + ' · sábado ' + c.horaEntradaSab + ' às ' + c.horaSaidaSab + ' (' + hhmm(sab) + ')';
+  } else if (sab === 0) {
+    t = t + ' · sábado de folga';
+  }
+  if (t) { t = t + ' · ' + hhmm(jornadaSemanaPrevista(c)) + ' na semana'; }
+  return t;
 }
 
 /* Calcula um dia de ponto */
@@ -1064,12 +1124,16 @@ function calcDia(reg, c){
              tipo === 'Falta justificada' || tipo === 'Afastamento') {
     he50 = trab;
   } else if (tipo === 'Falta') {
-    var p0 = c && num(c.jornadaDia) > 0 ? num(c.jornadaDia) : 8;
-    deficit = p0;
+    deficit = jornadaDiaUtil(c);
   } else {
-    if (trab > prev) { he50 = trab - prev; }
-    else if (trab > 0) { deficit = prev - trab; }
-    else { deficit = 0; }
+    var tol = TOLERANCIA_MIN / 60;
+    if (trab > prev) {
+      var sobra = trab - prev;
+      if (sobra > tol) { he50 = sobra; }
+    } else if (trab > 0) {
+      var falta = prev - trab;
+      if (falta > tol) { deficit = falta; }
+    }
   }
   return { trab: trab, prev: prev, he50: he50, he100: he100, deficit: deficit,
            saldo: he50 + he100 - deficit, tipo: tipo };
@@ -1167,6 +1231,14 @@ function montarPonto(){
   }
   el('ptTabela').innerHTML = t;
   el('ptPadraoBox').style.display = '';
+  var cab = el('ptHorario');
+  if (cab) {
+    var txt = textoHorario(c);
+    cab.innerHTML = txt ? '<b>Horário combinado:</b> ' + esc(txt) :
+      '<b style="color:var(--vermelho)">Horário não cadastrado</b> — defina entrada, saída e almoço na ficha desta pessoa, senão o cálculo de hora extra fica errado.';
+  }
+  if (c && c.horaEntrada) { el('ptpE1').value = c.horaEntrada; }
+  if (c && c.horaSaida) { el('ptpS2').value = c.horaSaida; }
   recalcPonto();
 }
 
@@ -1313,6 +1385,21 @@ function renderPainel(){
   el('pnKpis').innerHTML = h;
 
   var a = '';
+  for (var jj = 0; jj < at.length; jj++) {
+    var cj = at[jj];
+    var semana = jornadaSemanaPrevista(cj);
+    var diaUtil = jornadaDiaUtil(cj);
+    if (semana > 44.01) {
+      a += alerta('alto', 'Jornada acima do limite legal — ' + cj.nome,
+        'O horário cadastrado soma ' + hhmm(semana) + ' por semana. O limite é 44h. A diferença de ' +
+        hhmm(semana - 44) + ' por semana é hora extra devida, toda semana, com reflexo em férias, 13º e FGTS.');
+    }
+    if (diaUtil > 6 && num(cj.intervaloMin) < 60) {
+      a += alerta('alto', 'Jornada sem intervalo de almoço — ' + cj.nome,
+        'São ' + hhmm(diaUtil) + ' por dia com ' + (num(cj.intervaloMin) || 0) + ' min de intervalo. ' +
+        'Acima de 6 horas a lei exige no mínimo 1 hora. Intervalo não concedido é indenizado como 1 hora extra por dia.');
+    }
+  }
   var semEmp = 0;
   for (var se = 0; se < at.length; se++) { if (!at[se].empresaId) { semEmp++; } }
   if (semEmp > 0 && DB.EMPRESAS.length > 0) {
@@ -1424,6 +1511,9 @@ function renderEquipe(){
   r += kpi('Salário médio', comSal > 0 ? moeda(somaSal / comSal) : 'R$ 0,00', comSal + ' com salário informado');
   r += kpi('Tempo médio de casa', txtMedia, 'quanto a equipe já rodou com você');
   r += kpi('Em experiência', expCount, expCount > 0 ? 'prazo correndo — veja a coluna' : 'nenhum contrato em prazo');
+  var acima44 = 0;
+  for (var w = 0; w < lista.length; w++) { if (jornadaSemanaPrevista(lista[w]) > 44.01) { acima44++; } }
+  r += kpi('Jornada acima de 44h', acima44, acima44 > 0 ? 'hora extra devida toda semana' : 'dentro do limite');
   el('eqResumo').innerHTML = r;
   el('eqContagem').textContent = lista.length + ' de ' + todosDaEmpresa().length + (EMPRESA_ATIVA ? ' · ' + nomeEmpresa(EMPRESA_ATIVA) : '');
 
@@ -1450,7 +1540,7 @@ function renderEquipe(){
     t += '<tr><td><b>' + esc(c.nome) + '</b><div class="pos">' + esc(c.telefone || '') + '</div></td>' +
       '<td>' + tagEmp + '</td>' +
       '<td>' + esc(c.cargo) + '</td><td>' + esc(c.setor) + '</td><td>' + dataBR(c.admissao) + '</td>' +
-      '<td>' + tempoCasa(c.admissao).txt + '</td>' +
+      '<td>' + tempoCasa(c.admissao).txt + '<div class="pos">' + esc(textoHorario(c) || 'horário não definido') + '</div></td>' +
       '<td>' + txtCt + '</td><td>' + moeda(c.salario) + '</td>' +
       '<td><span class="tag ' + cl + '">' + esc(c.status || '—') + '</span></td>' +
       '<td>' + (df === 0 ? '<span class="tag t-verde">ok</span>' : '<span class="tag t-vermelho">' + df + ' falta</span>') + '</td>' +
@@ -1737,7 +1827,7 @@ function abrirUsuario(id){
     { k:'colabId', lb:'Limitar ao ponto de (vazio = toda a equipe)', t:'colabVazio' },
     { k:'status', lb:'Situação', t:'select', op:['Ativo','Inativo'] }];
   abrirForm('USUARIOS', id, id ? 'Editar acesso' : 'Novo acesso',
-    'Quem é operacional só consegue lançar cartão de ponto. Nada de salário, folha, ocorrência ou documento chega ao aparelho dessa pessoa.', ops);
+    'Quem é operacional só consegue lançar cartão de ponto. Nada de salário, folha, ocorrência ou documento chega ao aparelho dessa pessoa. Se trocar a própria senha, o sistema já continua funcionando — não precisa sair e entrar.', ops);
 }
 
 function preencherSelectColab(){
@@ -1796,8 +1886,7 @@ function gerarEspelho(){
       ' &nbsp;·&nbsp; <b>Cargo:</b> ' + esc(c ? c.cargo : '') +
       ' &nbsp;·&nbsp; <b>Admissão:</b> ' + dataBR(c ? c.admissao : '') +
       '<br><b>Mês de referência:</b> ' + mes.split('-')[1] + '/' + mes.split('-')[0] +
-      ' &nbsp;·&nbsp; <b>Jornada:</b> ' + (c && num(c.jornadaDia) > 0 ? num(c.jornadaDia) : 8) + 'h por dia útil, ' +
-      (c && num(c.jornadaSab) > 0 ? num(c.jornadaSab) : 4) + 'h aos sábados</p>' +
+      ' &nbsp;·&nbsp; <b>Jornada:</b> ' + esc(textoHorario(c) || hhmm(jornadaDiaUtil(c)) + ' por dia útil') + '</p>' +
       '<div class="rolagem"><table><tr><th>Dia</th><th></th><th>Entrada</th><th>S. almoço</th><th>Volta</th>' +
       '<th>Saída</th><th>Trabalhadas</th><th>Extras</th><th>Situação</th></tr>' + linhas + '</table></div>' +
       '<p style="font-size:13px;margin-top:14px">' +
@@ -1889,6 +1978,8 @@ function abrirForm(tabela, id, tit, dica, campos){
         h += '<option value="' + esc(f.op[o]) + '"' + (normStr(f.op[o]) === normStr(v) ? ' selected' : '') + '>' + esc(f.op[o]) + '</option>';
       }
       h += '</select>';
+    } else if (f.t === 'time') {
+      h += '<input type="time" id="fd_' + f.k + '" value="' + esc(v) + '">';
     } else if (f.t === 'empresa') {
       h += '<select id="fd_' + f.k + '"><option value="">— escolha a empresa —</option>';
       for (var pe = 0; pe < DB.EMPRESAS.length; pe++) {
@@ -1938,6 +2029,12 @@ function mdSalvar(){
   if (_mdTabela === 'HISTSALARIO' && num(reg.salarioAnterior) > 0) {
     reg.percentual = (((num(reg.salarioNovo) / num(reg.salarioAnterior)) - 1) * 100).toFixed(1);
   }
+  /* Se a pessoa trocou a propria senha, a sessao acompanha na hora.
+     Sem isso, todas as chamadas seguintes seriam recusadas. */
+  if (_mdTabela === 'USUARIOS' && reg.senha &&
+      normStr(reg.usuario) === normStr(SESSAO.usuario)) {
+    SESSAO.senha = reg.senha;
+  }
   fecharModal();
   salvarReg(_mdTabela, reg);
 }
@@ -1959,9 +2056,14 @@ function abrirColab(id){
     { k:'admissao', lb:'Data de admissão', t:'date' },
     { k:'contrato', lb:'Tipo de contrato', t:'select', op:['CLT','PJ','Experiência 45 dias','Experiência 90 dias','Estágio','Jovem Aprendiz','Autônomo'] },
     { k:'salario', lb:'Salário base (R$)', t:'number' },
-    { k:'jornada', lb:'Jornada semanal (horas)', t:'number', def:'44' },
-    { k:'jornadaDia', lb:'Horas por dia útil', t:'number', def:'8' },
-    { k:'jornadaSab', lb:'Horas no sábado', t:'number', def:'4' },
+    { k:'horaEntrada', lb:'Entrada (segunda a sexta)', t:'time', def:'08:00' },
+    { k:'horaSaida', lb:'Saída (segunda a sexta)', t:'time', def:'18:00' },
+    { k:'intervaloMin', lb:'Almoço previsto (minutos)', t:'number', step:'1', def:'60' },
+    { k:'sabTrabalha', lb:'Trabalha aos sábados?', t:'select', op:['Sim','Não'] },
+    { k:'horaEntradaSab', lb:'Entrada no sábado', t:'time', def:'08:00' },
+    { k:'horaSaidaSab', lb:'Saída no sábado', t:'time', def:'12:00' },
+    { k:'intervaloSabMin', lb:'Almoço no sábado (minutos)', t:'number', step:'1', def:'0' },
+    { k:'jornada', lb:'Jornada semanal contratada (horas)', t:'number', def:'44' },
     { k:'status', lb:'Situação', t:'select', op:['Ativo','Férias','Afastado','Aviso prévio','Desligado'] },
     { k:'demissao', lb:'Data de desligamento', t:'date' },
     { k:'cpf', lb:'CPF' },
